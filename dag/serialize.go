@@ -2,11 +2,29 @@ package dag
 
 import (
 	"encoding/json"
-	"sort"
 
 	merkle_tree "github.com/HORNET-Storage/Scionic-Merkle-Tree/v2/tree"
 	cbor "github.com/fxamacker/cbor/v2"
 )
+
+// strictCBORDecMode bounds decoding of untrusted CBOR (from peers/relays) to
+// guard against resource exhaustion from deeply nested or absurdly large
+// inputs, and rejects duplicate map keys. Limits stay generous enough for very
+// large repositories.
+var strictCBORDecMode cbor.DecMode
+
+func init() {
+	mode, err := cbor.DecOptions{
+		MaxNestedLevels:  256,
+		MaxArrayElements: 100_000_000,
+		MaxMapPairs:      100_000_000,
+		DupMapKey:        cbor.DupMapKeyEnforcedAPF,
+	}.DecMode()
+	if err != nil {
+		panic(err)
+	}
+	strictCBORDecMode = mode
+}
 
 type SerializableDag struct {
 	Root  string
@@ -128,13 +146,18 @@ func FromSerializable(s *SerializableDag) *Dag {
 		}
 	}
 
-	// Third pass: reconstruct parent hashes
-	for hash, leaf := range dag.Leafs {
-		for _, potential := range dag.Leafs {
-			if potential.HasLink(hash) {
-				leaf.ParentHash = potential.Hash
-				break
+	// Third pass: reconstruct parent hashes via a single child->parent index
+	parentOf := make(map[string]string, len(dag.Leafs))
+	for _, potential := range dag.Leafs {
+		for _, childHash := range potential.Links {
+			if _, ok := parentOf[childHash]; !ok {
+				parentOf[childHash] = potential.Hash
 			}
+		}
+	}
+	for hash, leaf := range dag.Leafs {
+		if parentHash, ok := parentOf[hash]; ok {
+			leaf.ParentHash = parentHash
 		}
 	}
 
@@ -189,7 +212,7 @@ func (dag *Dag) ToJSON() ([]byte, error) {
 
 func FromCBOR(data []byte) (*Dag, error) {
 	var serializable SerializableDag
-	if err := cbor.Unmarshal(data, &serializable); err != nil {
+	if err := strictCBORDecMode.Unmarshal(data, &serializable); err != nil {
 		return nil, err
 	}
 	return FromSerializable(&serializable), nil
@@ -240,10 +263,9 @@ func TransmissionPacketFromSerializable(s *SerializableTransmissionPacket) *Tran
 		Proofs:            make(map[string]*ClassicTreeBranch),
 	}
 
-	// Copy and sort links (Links is already an array)
+	// Copy links preserving order (order matters for chunked files)
 	leaf.Links = make([]string, len(s.Leaf.Links))
 	copy(leaf.Links, s.Leaf.Links)
-	sort.Strings(leaf.Links)
 
 	// Copy and sort additional data
 	leaf.AdditionalData = SortMapByKeys(s.Leaf.AdditionalData)
@@ -286,7 +308,7 @@ func (packet *TransmissionPacket) ToJSON() ([]byte, error) {
 // TransmissionPacketFromCBOR deserializes a TransmissionPacket from CBOR format
 func TransmissionPacketFromCBOR(data []byte) (*TransmissionPacket, error) {
 	var serializable SerializableTransmissionPacket
-	if err := cbor.Unmarshal(data, &serializable); err != nil {
+	if err := strictCBORDecMode.Unmarshal(data, &serializable); err != nil {
 		return nil, err
 	}
 	return TransmissionPacketFromSerializable(&serializable), nil
@@ -342,10 +364,9 @@ func BatchedTransmissionPacketFromSerializable(s *SerializableBatchedTransmissio
 			Proofs:            make(map[string]*ClassicTreeBranch),
 		}
 
-		// Copy and sort links (Links is already an array)
+		// Copy links preserving order (order matters for chunked files)
 		leaves[i].Links = make([]string, len(serializableLeaf.Links))
 		copy(leaves[i].Links, serializableLeaf.Links)
-		sort.Strings(leaves[i].Links)
 
 		// Copy and sort additional data
 		leaves[i].AdditionalData = SortMapByKeys(serializableLeaf.AdditionalData)
@@ -388,7 +409,7 @@ func (packet *BatchedTransmissionPacket) ToJSON() ([]byte, error) {
 // BatchedTransmissionPacketFromCBOR deserializes a BatchedTransmissionPacket from CBOR format
 func BatchedTransmissionPacketFromCBOR(data []byte) (*BatchedTransmissionPacket, error) {
 	var serializable SerializableBatchedTransmissionPacket
-	if err := cbor.Unmarshal(data, &serializable); err != nil {
+	if err := strictCBORDecMode.Unmarshal(data, &serializable); err != nil {
 		return nil, err
 	}
 	return BatchedTransmissionPacketFromSerializable(&serializable), nil

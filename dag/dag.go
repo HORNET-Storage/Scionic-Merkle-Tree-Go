@@ -1055,10 +1055,53 @@ func (d *Dag) pruneIrrelevantLinks(relevantHashes map[string]bool) {
 	}
 }
 
+// compareChunkItemNames orders chunk leaves by the numeric suffix of their
+// ItemName (e.g. "file/0", "file/1", ...), falling back to lexical order.
+func compareChunkItemNames(a, b string) bool {
+	numA, errA := strconv.Atoi(filepath.Base(a))
+	numB, errB := strconv.Atoi(filepath.Base(b))
+	if errA != nil || errB != nil {
+		return a < b
+	}
+	return numA < numB
+}
+
+// safeJoin joins base with a single-component child name, rejecting names that
+// contain path separators, are "."/"..", or are absolute. This prevents a
+// malicious DAG's ItemName (e.g. "../../etc/passwd") from escaping the target
+// directory when a downloaded DAG is reconstructed to disk.
+func safeJoin(base, name string) (string, error) {
+	if name == "" || name == "." || name == ".." ||
+		strings.ContainsAny(name, `/\`) || filepath.IsAbs(name) {
+		return "", fmt.Errorf("unsafe item name %q for path reconstruction", name)
+	}
+	child := filepath.Join(base, name)
+	rel, err := filepath.Rel(base, child)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("item name %q escapes the target directory", name)
+	}
+	return child, nil
+}
+
+// buildParentIndex returns a child-hash -> parent-hash map for O(1) parent
+// lookups (avoids scanning every leaf for each path step).
+func (d *Dag) buildParentIndex() map[string]string {
+	parentOf := make(map[string]string, len(d.Leafs))
+	for _, leaf := range d.Leafs {
+		for _, childHash := range leaf.Links {
+			if _, ok := parentOf[childHash]; !ok {
+				parentOf[childHash] = leaf.Hash
+			}
+		}
+	}
+	return parentOf
+}
+
 // buildVerificationBranch creates a branch containing the leaf and its verification path
 func (d *Dag) buildVerificationBranch(leaf *DagLeaf) (*DagBranch, error) {
 	// Clone the root leaf first to ensure it has all fields
 	rootLeaf := d.Leafs[d.Root].Clone()
+	parentOf := d.buildParentIndex()
 
 	branch := &DagBranch{
 		Leaf: leaf.Clone(),
@@ -1072,13 +1115,11 @@ func (d *Dag) buildVerificationBranch(leaf *DagLeaf) (*DagBranch, error) {
 	current := leaf
 	for current.Hash != d.Root {
 		// Find parent in this partial DAG, not the original
-		var parent *DagLeaf
-		for _, potential := range d.Leafs {
-			if potential.HasLink(current.Hash) {
-				parent = potential
-				break
-			}
+		parentHash, ok := parentOf[current.Hash]
+		if !ok {
+			return nil, fmt.Errorf("failed to find parent for leaf %s", current.Hash)
 		}
+		parent := d.Leafs[parentHash]
 		if parent == nil {
 			return nil, fmt.Errorf("failed to find parent for leaf %s", current.Hash)
 		}
@@ -1232,13 +1273,7 @@ func (d *Dag) GetPartial(leafHashes []string, pruneLinks bool) (*Dag, error) {
 	// Process each requested leaf hash
 	for _, requestedHash := range leafHashes {
 		// Find the leaf with this hash
-		var targetLeaf *DagLeaf
-		for hash, leaf := range d.Leafs {
-			if hash == requestedHash {
-				targetLeaf = leaf
-				break
-			}
-		}
+		targetLeaf := d.Leafs[requestedHash]
 
 		if targetLeaf == nil {
 			return nil, fmt.Errorf("leaf not found: %s", requestedHash)

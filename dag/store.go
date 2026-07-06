@@ -1,6 +1,8 @@
 package dag
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -1161,22 +1163,13 @@ func (ds *DagStore) isPartialStreaming() (bool, error) {
 		return actualCount < rootLeaf.LeafCount, nil
 	}
 
-	// Fallback: Check if all of root's direct children exist
-	// If any are missing, it's a partial DAG
-	for _, childHash := range rootLeaf.Links {
-		exists, err := ds.leafStore.HasLeaf(childHash)
-		if err != nil {
-			return false, fmt.Errorf("failed to check child existence: %w", err)
-		}
-		if !exists {
-			return true, nil // Missing child = partial
-		}
+	// Fallback: count every existing leaf reachable from the root and compare to
+	// the root's LeafCount. Fewer existing leaves than expected means partial.
+	hashes, err := ds.collectExistingLeafHashesFromRoot()
+	if err != nil {
+		return false, err
 	}
-
-	// If root has expected children and they all exist, check one level deeper
-	// This is a heuristic - for true accuracy we'd need full traversal
-	// But missing any child at any level means it's partial
-	return false, nil
+	return len(hashes) < rootLeaf.LeafCount, nil
 }
 
 func (ds *DagStore) verifyFullDagStreaming() error {
@@ -1302,6 +1295,24 @@ func (ds *DagStore) verifyWithProofsStreaming() error {
 		return err
 	}
 
+	// Build a child->parent index once so each path-to-root check is O(1) instead
+	// of scanning every leaf per step.
+	parentOf := make(map[string]string, len(leafHashes))
+	for _, hash := range leafHashes {
+		l, err := ds.RetrieveLeafWithoutContent(hash)
+		if err != nil {
+			return err
+		}
+		if l == nil {
+			continue
+		}
+		for _, childHash := range l.Links {
+			if _, ok := parentOf[childHash]; !ok {
+				parentOf[childHash] = hash
+			}
+		}
+	}
+
 	// Verify each non-root leaf and its path to root
 	for _, leafHash := range leafHashes {
 		if leafHash == ds.Root {
@@ -1322,7 +1333,7 @@ func (ds *DagStore) verifyWithProofsStreaming() error {
 		}
 
 		// Verify path to root
-		if err := ds.verifyPathToRootStreaming(leaf); err != nil {
+		if err := ds.verifyPathToRootStreaming(leaf, parentOf); err != nil {
 			return err
 		}
 	}
@@ -1330,12 +1341,16 @@ func (ds *DagStore) verifyWithProofsStreaming() error {
 	return nil
 }
 
-func (ds *DagStore) verifyPathToRootStreaming(leaf *DagLeaf) error {
+func (ds *DagStore) verifyPathToRootStreaming(leaf *DagLeaf, parentOf map[string]string) error {
 	current := leaf
 
 	for current.Hash != ds.Root {
-		// Find parent
-		parent, err := ds.findParentStreaming(current.Hash)
+		// Find parent via the precomputed index
+		parentHash, ok := parentOf[current.Hash]
+		if !ok {
+			return fmt.Errorf("broken path to root for leaf %s", leaf.Hash)
+		}
+		parent, err := ds.RetrieveLeafWithoutContent(parentHash)
 		if err != nil {
 			return err
 		}
@@ -1401,39 +1416,6 @@ func (ds *DagStore) verifyWithProofStreaming(parent *DagLeaf, childHash string) 
 	}
 
 	return nil
-}
-
-func (ds *DagStore) findParentStreaming(childHash string) (*DagLeaf, error) {
-	// Get all leaf hashes in the store
-	var leafHashes []string
-
-	if enumerator, ok := ds.leafStore.(LeafEnumerator); ok {
-		leafHashes = enumerator.GetAllLeafHashes()
-	} else {
-		// Fallback: collect existing hashes by traversing
-		var err error
-		leafHashes, err = ds.collectExistingLeafHashesFromRoot()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// Search for the parent
-	for _, hash := range leafHashes {
-		leaf, err := ds.RetrieveLeafWithoutContent(hash)
-		if err != nil {
-			return nil, err
-		}
-		if leaf == nil {
-			continue
-		}
-
-		if leaf.HasLink(childHash) {
-			return leaf, nil
-		}
-	}
-
-	return nil, nil // Parent not found
 }
 
 func (ds *DagStore) collectAllLeafHashesForPartialDag() ([]string, error) {
@@ -1533,6 +1515,23 @@ func (ds *DagStore) verifyChildrenAgainstMerkleRootStreaming(parent *DagLeaf) er
 	return nil
 }
 
+// verifyLeafContentHash checks that a leaf's content matches its committed
+// ContentHash. Streaming verification loads leaves without content, so the
+// content-hash binding must be re-checked here whenever content is loaded.
+func verifyLeafContentHash(leaf *DagLeaf) error {
+	if leaf == nil || leaf.Content == nil {
+		return nil
+	}
+	if leaf.ContentHash == nil {
+		return fmt.Errorf("leaf %s has content but no content hash to verify against", leaf.Hash)
+	}
+	h := sha256.Sum256(leaf.Content)
+	if !bytes.Equal(h[:], leaf.ContentHash) {
+		return fmt.Errorf("leaf %s content does not match its content hash", leaf.Hash)
+	}
+	return nil
+}
+
 // GetContentFromLeafStreaming retrieves content for a file leaf using streaming.
 func (ds *DagStore) GetContentFromLeafStreaming(hash string) ([]byte, error) {
 	leaf, err := ds.RetrieveLeafWithoutContent(hash)
@@ -1549,14 +1548,20 @@ func (ds *DagStore) GetContentFromLeafStreaming(hash string) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
+		if err := verifyLeafContentHash(fullLeaf); err != nil {
+			return nil, err
+		}
 		return fullLeaf.Content, nil
 	}
 
-	// For chunked files, load chunks in order and concatenate
-	var content []byte
+	// For chunked files, load every chunk (verifying each against its content
+	// hash), order them by numeric ItemName since link order is not part of the
+	// CID, then concatenate.
+	chunkHashes := make([]string, len(leaf.Links))
+	copy(chunkHashes, leaf.Links)
 
-	// Links should already be in order for file chunks
-	for _, chunkHash := range leaf.Links {
+	chunkLeaves := make(map[string]*DagLeaf, len(chunkHashes))
+	for _, chunkHash := range chunkHashes {
 		chunkLeaf, err := ds.RetrieveLeaf(chunkHash)
 		if err != nil {
 			return nil, fmt.Errorf("failed to retrieve chunk %s: %w", chunkHash, err)
@@ -1564,10 +1569,19 @@ func (ds *DagStore) GetContentFromLeafStreaming(hash string) ([]byte, error) {
 		if chunkLeaf == nil {
 			return nil, fmt.Errorf("chunk not found: %s", chunkHash)
 		}
+		if err := verifyLeafContentHash(chunkLeaf); err != nil {
+			return nil, err
+		}
+		chunkLeaves[chunkHash] = chunkLeaf
+	}
 
-		content = append(content, chunkLeaf.Content...)
+	sort.SliceStable(chunkHashes, func(i, j int) bool {
+		return compareChunkItemNames(chunkLeaves[chunkHashes[i]].ItemName, chunkLeaves[chunkHashes[j]].ItemName)
+	})
 
-		// chunkLeaf can now be garbage collected
+	var content []byte
+	for _, chunkHash := range chunkHashes {
+		content = append(content, chunkLeaves[chunkHash].Content...)
 	}
 
 	return content, nil
@@ -1604,7 +1618,10 @@ func (ds *DagStore) createDirectoryLeafStreaming(leaf *DagLeaf, path string) err
 				return fmt.Errorf("child leaf not found: %s", childHash)
 			}
 
-			childPath := joinPath(path, childLeaf.ItemName)
+			childPath, err := safeJoin(path, childLeaf.ItemName)
+			if err != nil {
+				return err
+			}
 			if err := ds.createDirectoryLeafStreaming(childLeaf, childPath); err != nil {
 				return err
 			}
@@ -1790,7 +1807,7 @@ func (ds *DagStore) VerifyLeafWithParent(leafHash string, parentHash string, pro
 }
 
 func createDir(path string) error {
-	return os.MkdirAll(path, os.ModePerm)
+	return os.MkdirAll(path, 0o755)
 }
 
 func joinPath(base, name string) string {
@@ -1798,5 +1815,5 @@ func joinPath(base, name string) string {
 }
 
 func writeFile(path string, content []byte) error {
-	return os.WriteFile(path, content, os.ModePerm)
+	return os.WriteFile(path, content, 0o644)
 }

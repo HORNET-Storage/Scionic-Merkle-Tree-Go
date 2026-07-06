@@ -282,10 +282,10 @@ func New(config *Config, blocks map[string]DataBlock) (m *MerkleTree, err error)
 
 // Retrieve the index for the given key in the stored sorted key array
 func (t *MerkleTree) GetIndexForKey(key string) (int, bool) {
-	for index, storedKey := range t.Keys {
-		if storedKey == key {
-			return index, true
-		}
+	// t.Keys is sorted during construction, so use binary search.
+	i := sort.SearchStrings(t.Keys, key)
+	if i < len(t.Keys) && t.Keys[i] == key {
+		return i, true
 	}
 	return -1, false
 }
@@ -529,13 +529,6 @@ func (m *MerkleTree) updateProofPairs(buffer [][]byte, idx, batch, step int) {
 	for i := start; i < end; i++ {
 		m.Proofs[i].Siblings = append(m.Proofs[i].Siblings, buffer[idx])
 	}
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }
 
 // generateLeaves generates the leaves slice from the data blocks.

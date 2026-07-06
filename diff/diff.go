@@ -291,10 +291,15 @@ func DiffFromNewLeaves(originalDag *dag.Dag, newLeaves map[string]*dag.DagLeaf) 
 	for hash, leaf := range newLeaves {
 		newLeafsMap[hash] = leaf
 
-		// Only root leaf has a LeafCount and it will always be 1 or higher
+		// Only the root leaf has a LeafCount (>= 1). Pick deterministically (by
+		// highest LeafCount, then smallest hash) so malformed input can't yield a
+		// nondeterministic root from map iteration order.
 		if leaf.LeafCount > 0 {
-			newRoot = leaf
-			newRootHash = hash
+			if newRoot == nil || leaf.LeafCount > newRoot.LeafCount ||
+				(leaf.LeafCount == newRoot.LeafCount && hash < newRootHash) {
+				newRoot = leaf
+				newRootHash = hash
+			}
 		}
 	}
 

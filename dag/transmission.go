@@ -485,6 +485,10 @@ func (d *Dag) VerifyBatchedTransmissionPacket(packet *BatchedTransmissionPacket)
 		batchLeaves[leaf.Hash] = leaf
 	}
 
+	// Track parents whose full child set we've already checked, to verify each
+	// complete parent's Merkle root exactly once.
+	verifiedParents := make(map[string]bool)
+
 	// Verify each leaf in the batch
 	for _, childLeaf := range packet.Leaves {
 		childHash := childLeaf.Hash
@@ -530,8 +534,16 @@ func (d *Dag) VerifyBatchedTransmissionPacket(packet *BatchedTransmissionPacket)
 			if len(parentLeaf.Links) > 1 {
 				// Check if parent has proofs (if not, all children are in this batch)
 				if len(parentLeaf.Proofs) == 0 {
-					// No proofs means ALL children are in this batch with parent
-					// Full Merkle verification will happen during Apply phase
+					// No proofs means all children are in this batch with the
+					// parent. Verify the parent's Merkle root against its full child
+					// set now (once per parent) so a forged child is rejected here,
+					// not only by a later Dag.Verify().
+					if !verifiedParents[parentHash] {
+						if err := parentLeaf.VerifyChildrenAgainstMerkleRoot(d); err != nil {
+							return fmt.Errorf("parent %s merkle root verification failed: %w", parentHash, err)
+						}
+						verifiedParents[parentHash] = true
+					}
 					continue
 				}
 

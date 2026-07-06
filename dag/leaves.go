@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"os"
-	"path/filepath"
 	"sort"
 
 	"github.com/HORNET-Storage/Scionic-Merkle-Tree/v2/merkletree"
@@ -424,6 +423,16 @@ func (leaf *DagLeaf) VerifyLeaf() error {
 		return fmt.Errorf("leaf failed to verify")
 	}
 
+	if leaf.Content != nil {
+		if leaf.ContentHash == nil {
+			return fmt.Errorf("leaf %s has content but no content hash to verify against", leaf.Hash)
+		}
+		contentHash := sha256.Sum256(leaf.Content)
+		if !bytes.Equal(contentHash[:], leaf.ContentHash) {
+			return fmt.Errorf("leaf %s content does not match its content hash", leaf.Hash)
+		}
+	}
+
 	return nil
 }
 
@@ -606,13 +615,25 @@ func (leaf *DagLeaf) VerifyRootLeaf(dag *Dag) error {
 		return fmt.Errorf("leaf failed to verify")
 	}
 
+	if leaf.Content != nil {
+		if leaf.ContentHash == nil {
+			return fmt.Errorf("root leaf %s has content but no content hash to verify against", leaf.Hash)
+		}
+		contentHash := sha256.Sum256(leaf.Content)
+		if !bytes.Equal(contentHash[:], leaf.ContentHash) {
+			return fmt.Errorf("root leaf %s content does not match its content hash", leaf.Hash)
+		}
+	}
+
 	return nil
 }
 
 func (leaf *DagLeaf) CreateDirectoryLeaf(path string, dag *Dag) error {
 	switch leaf.Type {
 	case DirectoryLeafType:
-		_ = os.Mkdir(path, os.ModePerm)
+		if err := os.MkdirAll(path, 0o755); err != nil {
+			return err
+		}
 
 		for _, link := range leaf.Links {
 			childLeaf := dag.Leafs[link]
@@ -620,9 +641,11 @@ func (leaf *DagLeaf) CreateDirectoryLeaf(path string, dag *Dag) error {
 				return fmt.Errorf("invalid link: %s", link)
 			}
 
-			childPath := filepath.Join(path, childLeaf.ItemName)
-			err := childLeaf.CreateDirectoryLeaf(childPath, dag)
+			childPath, err := safeJoin(path, childLeaf.ItemName)
 			if err != nil {
+				return err
+			}
+			if err := childLeaf.CreateDirectoryLeaf(childPath, dag); err != nil {
 				return err
 			}
 		}
@@ -631,21 +654,27 @@ func (leaf *DagLeaf) CreateDirectoryLeaf(path string, dag *Dag) error {
 		var content []byte
 
 		if len(leaf.Links) > 0 {
-			// Links are already sorted, iterate directly
+			// Order chunks by their numeric ItemName so content is reassembled
+			// correctly regardless of link ordering.
+			chunks := make([]*DagLeaf, 0, len(leaf.Links))
 			for _, link := range leaf.Links {
 				childLeaf := dag.Leafs[link]
 				if childLeaf == nil {
 					return fmt.Errorf("invalid link: %s", link)
 				}
-
-				content = append(content, childLeaf.Content...)
+				chunks = append(chunks, childLeaf)
+			}
+			sort.Slice(chunks, func(i, j int) bool {
+				return compareChunkItemNames(chunks[i].ItemName, chunks[j].ItemName)
+			})
+			for _, chunkLeaf := range chunks {
+				content = append(content, chunkLeaf.Content...)
 			}
 		} else {
 			content = leaf.Content
 		}
 
-		err := os.WriteFile(path, content, os.ModePerm)
-		if err != nil {
+		if err := os.WriteFile(path, content, 0o644); err != nil {
 			return err
 		}
 	}

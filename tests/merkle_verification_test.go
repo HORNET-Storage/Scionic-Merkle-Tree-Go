@@ -1,6 +1,11 @@
 package tests
 
 import (
+	"bytes"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/HORNET-Storage/Scionic-Merkle-Tree/v2/dag"
@@ -234,5 +239,131 @@ func TestPartialDagMerkleVerification(t *testing.T) {
 		}
 
 		t.Logf("✓ %s: Partial DAG merkle verification passed", fixture.Name)
+	})
+}
+
+// TestContentTamperingDetection verifies that tampering with a leaf's Content
+// bytes is detected during verification.
+func TestContentTamperingDetection(t *testing.T) {
+	testDir, err := os.MkdirTemp("", "content_tamper_test_*")
+	if err != nil {
+		t.Fatalf("Failed to create temp directory: %v", err)
+	}
+	defer os.RemoveAll(testDir)
+
+	// tamperLeafContent clones src and flips a single content byte in the target
+	// leaf, leaving Hash and ContentHash untouched. Clone() shares the Content
+	// backing array, so we copy the slice before mutating to avoid corrupting src.
+	tamperLeafContent := func(src *dag.Dag, targetHash string) *dag.Dag {
+		tampered := &dag.Dag{Root: src.Root, Leafs: make(map[string]*dag.DagLeaf)}
+		for hash, leaf := range src.Leafs {
+			tampered.Leafs[hash] = leaf.Clone()
+		}
+		target := tampered.Leafs[targetHash]
+		flipped := make([]byte, len(target.Content))
+		copy(flipped, target.Content)
+		flipped[0] ^= 0xFF
+		target.Content = flipped
+		return tampered
+	}
+
+	t.Run("DetectTamperedRootFileContent", func(t *testing.T) {
+		// Single-file DAG: the root leaf is itself a file leaf carrying content,
+		// so this exercises the check in VerifyRootLeaf.
+		testFile := filepath.Join(testDir, "root_content.txt")
+		if err := os.WriteFile(testFile, bytes.Repeat([]byte("a"), 4096), 0644); err != nil {
+			t.Fatalf("Failed to write test file: %v", err)
+		}
+
+		d, err := dag.CreateDag(testFile, false)
+		if err != nil {
+			t.Fatalf("Failed to create DAG: %v", err)
+		}
+		if err := d.Verify(); err != nil {
+			t.Fatalf("Original DAG verification failed: %v", err)
+		}
+		if len(d.Leafs[d.Root].Content) == 0 {
+			t.Fatal("expected the root file leaf to carry content")
+		}
+
+		tampered := tamperLeafContent(d, d.Root)
+		err = tampered.Verify()
+		if err == nil {
+			t.Fatal("Expected verification to fail with tampered root content, but it passed!")
+		}
+		if !strings.Contains(err.Error(), "content does not match its content hash") {
+			t.Fatalf("Expected a content-hash mismatch error, got: %v", err)
+		}
+		t.Logf("✓ Correctly detected tampered root content: %v", err)
+	})
+
+	t.Run("DetectTamperedChildFileContent", func(t *testing.T) {
+		// Multi-file DAG: file leaves under a directory root carry content, so
+		// this exercises the check in VerifyLeaf for a non-root leaf.
+		inputDir := filepath.Join(testDir, "multi")
+		if err := os.MkdirAll(inputDir, 0755); err != nil {
+			t.Fatalf("Failed to create input dir: %v", err)
+		}
+		for i := 0; i < 3; i++ {
+			f := filepath.Join(inputDir, fmt.Sprintf("file%d.txt", i))
+			if err := os.WriteFile(f, bytes.Repeat([]byte{byte('a' + i)}, 2048), 0644); err != nil {
+				t.Fatalf("Failed to write file: %v", err)
+			}
+		}
+
+		d, err := dag.CreateDag(inputDir, false)
+		if err != nil {
+			t.Fatalf("Failed to create DAG: %v", err)
+		}
+		if err := d.Verify(); err != nil {
+			t.Fatalf("Original DAG verification failed: %v", err)
+		}
+
+		var target string
+		for hash, leaf := range d.Leafs {
+			if hash != d.Root && len(leaf.Content) > 0 {
+				target = hash
+				break
+			}
+		}
+		if target == "" {
+			t.Fatal("no content-bearing non-root leaf found")
+		}
+
+		tampered := tamperLeafContent(d, target)
+		err = tampered.Verify()
+		if err == nil {
+			t.Fatal("Expected verification to fail with tampered child content, but it passed!")
+		}
+		if !strings.Contains(err.Error(), "content does not match its content hash") {
+			t.Fatalf("Expected a content-hash mismatch error, got: %v", err)
+		}
+		t.Logf("✓ Correctly detected tampered child content: %v", err)
+	})
+
+	t.Run("MetadataOnlyLeavesStillVerify", func(t *testing.T) {
+		// Positive control: stripping content (metadata-only retrieval) must still
+		// verify, because the content check is skipped when Content is absent.
+		testFile := filepath.Join(testDir, "metadata_only.txt")
+		if err := os.WriteFile(testFile, bytes.Repeat([]byte("z"), 4096), 0644); err != nil {
+			t.Fatalf("Failed to write test file: %v", err)
+		}
+
+		d, err := dag.CreateDag(testFile, false)
+		if err != nil {
+			t.Fatalf("Failed to create DAG: %v", err)
+		}
+
+		stripped := &dag.Dag{Root: d.Root, Leafs: make(map[string]*dag.DagLeaf)}
+		for hash, leaf := range d.Leafs {
+			c := leaf.Clone()
+			c.Content = nil
+			stripped.Leafs[hash] = c
+		}
+
+		if err := stripped.Verify(); err != nil {
+			t.Fatalf("Metadata-only DAG (content stripped) should still verify, but failed: %v", err)
+		}
+		t.Log("✓ Metadata-only DAG still verifies (content check correctly skipped)")
 	})
 }
