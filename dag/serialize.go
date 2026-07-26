@@ -56,6 +56,8 @@ type SerializableTransmissionPacket struct {
 type SerializableBatchedTransmissionPacket struct {
 	Leaves        []*SerializableDagLeaf
 	Relationships map[string]string
+	PacketIndex   int
+	TotalPackets  int
 }
 
 func (dag *Dag) ToSerializable() *SerializableDag {
@@ -328,6 +330,8 @@ func (packet *BatchedTransmissionPacket) ToSerializable() *SerializableBatchedTr
 	serializable := &SerializableBatchedTransmissionPacket{
 		Leaves:        make([]*SerializableDagLeaf, len(packet.Leaves)),
 		Relationships: make(map[string]string),
+		PacketIndex:   packet.PacketIndex,
+		TotalPackets:  packet.TotalPackets,
 	}
 
 	for i, leaf := range packet.Leaves {
@@ -382,6 +386,8 @@ func BatchedTransmissionPacketFromSerializable(s *SerializableBatchedTransmissio
 	packet := &BatchedTransmissionPacket{
 		Leaves:        leaves,
 		Relationships: make(map[string]string),
+		PacketIndex:   s.PacketIndex,
+		TotalPackets:  s.TotalPackets,
 	}
 
 	// Copy relationships
