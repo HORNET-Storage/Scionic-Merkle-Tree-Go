@@ -28,8 +28,17 @@ type Dag struct {
 	Labels map[string]string // label -> leaf hash (excludes root which is always "0")
 }
 
+// DagStats contains the exact aggregate values committed into a root leaf.
+// The values describe unique non-root leaves, matching the Dag.Leafs map semantics.
+type DagStats struct {
+	LeafCount   int
+	ContentSize int64
+	DagSize     int64
+}
+
 type DagBuilder struct {
 	Leafs map[string]*DagLeaf
+	stats DagStats
 	mu    sync.Mutex
 }
 

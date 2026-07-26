@@ -374,7 +374,7 @@ func streamFileChunks(fullPath string, chunkSize int, callback func(chunk []byte
 	}
 	defer file.Close()
 
-	// If no chunk size specified, read entire file (fallback behavior)
+	// If no chunk size is specified, retain the single-read fallback.
 	if chunkSize <= 0 {
 		data, err := io.ReadAll(file)
 		if err != nil {
@@ -383,34 +383,32 @@ func streamFileChunks(fullPath string, chunkSize int, callback func(chunk []byte
 		return callback(data, 0)
 	}
 
-	// Stream file in chunks
-	buffer := make([]byte, chunkSize)
-	index := 0
+	info, err := file.Stat()
+	if err != nil {
+		return err
+	}
+	remaining := info.Size()
+	if remaining == 0 {
+		return nil
+	}
 
-	for {
-		n, err := io.ReadFull(file, buffer)
-		if err == io.EOF {
-			break
+	// Allocate the owned slice the leaf will retain, sized to the actual chunk.
+	// The old implementation allocated 2 MiB for every file and then copied each
+	// chunk into a second slice.
+	index := 0
+	for remaining > 0 {
+		nextSize := int64(chunkSize)
+		if remaining < nextSize {
+			nextSize = remaining
 		}
-		if err == io.ErrUnexpectedEOF {
-			// Partial read - this is the last chunk
-			chunk := make([]byte, n)
-			copy(chunk, buffer[:n])
-			if err := callback(chunk, index); err != nil {
-				return err
-			}
-			break
-		}
-		if err != nil {
+		chunk := make([]byte, int(nextSize))
+		if _, err := io.ReadFull(file, chunk); err != nil {
 			return err
 		}
-
-		// Full chunk read - make a copy since we reuse the buffer
-		chunk := make([]byte, n)
-		copy(chunk, buffer[:n])
 		if err := callback(chunk, index); err != nil {
 			return err
 		}
+		remaining -= nextSize
 		index++
 	}
 
@@ -671,22 +669,26 @@ func CreateDagBuilder() *DagBuilder {
 	}
 }
 
-// AddLeafSafe is a thread-safe version of AddLeaf for parallel processing
+// AddLeafSafe is a thread-safe version of AddLeaf for parallel processing.
 func (b *DagBuilder) AddLeafSafe(leaf *DagLeaf, parentLeaf *DagLeaf) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	return b.addLeafUnsafe(leaf, parentLeaf)
 }
 
-// addLeafUnsafe is the internal implementation without locking
+// addLeafUnsafe is the internal implementation without locking.
 func (b *DagBuilder) addLeafUnsafe(leaf *DagLeaf, parentLeaf *DagLeaf) error {
+	if leaf == nil {
+		return fmt.Errorf("cannot add nil leaf")
+	}
+
 	if parentLeaf != nil {
-		// Check if link already exists
+		// Check if link already exists.
 		if !parentLeaf.HasLink(leaf.Hash) {
 			parentLeaf.AddLink(leaf.Hash)
 		}
 
-		// If parent has more than one link, rebuild its merkle tree
+		// If parent has more than one link, rebuild its merkle tree.
 		if len(parentLeaf.Links) > 1 {
 			builder := merkle_tree.CreateTree()
 			for _, link := range parentLeaf.Links {
@@ -702,12 +704,33 @@ func (b *DagBuilder) addLeafUnsafe(leaf *DagLeaf, parentLeaf *DagLeaf) error {
 		}
 	}
 
+	// Dag.Leafs is content-addressed, so duplicates are one logical leaf and
+	// must contribute to root statistics exactly once.
+	if _, exists := b.Leafs[leaf.Hash]; exists {
+		return nil
+	}
+	serializedSize, err := SerializedLeafSize(leaf)
+	if err != nil {
+		return err
+	}
 	b.Leafs[leaf.Hash] = leaf
+	b.stats.LeafCount++
+	if leaf.Content != nil {
+		b.stats.ContentSize += int64(len(leaf.Content))
+	}
+	b.stats.DagSize += serializedSize
 	return nil
 }
 
 func (b *DagBuilder) AddLeaf(leaf *DagLeaf, parentLeaf *DagLeaf) error {
 	return b.addLeafUnsafe(leaf, parentLeaf)
+}
+
+// Stats returns exact aggregate values for the builder's unique non-root leaves.
+func (b *DagBuilder) Stats() DagStats {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.stats
 }
 
 func (b *DagBuilder) BuildDag(root string) *Dag {

@@ -136,9 +136,20 @@ func (b *DagLeafBuilder) BuildLeaf(additionalData map[string]string) (*DagLeaf, 
 }
 
 func (b *DagLeafBuilder) BuildRootLeaf(dag *DagBuilder, additionalData map[string]string) (*DagLeaf, error) {
+	if dag == nil {
+		return nil, fmt.Errorf("dag builder is required")
+	}
+	return b.BuildRootLeafWithStats(dag.Stats(), additionalData)
+}
+
+// BuildRootLeafWithStats builds the same canonical root leaf as BuildRootLeaf
+// without scanning or materializing all non-root leaves.
+func (b *DagLeafBuilder) BuildRootLeafWithStats(stats DagStats, additionalData map[string]string) (*DagLeaf, error) {
 	if b.LeafType == "" {
-		err := fmt.Errorf("leaf must have a type defined")
-		return nil, err
+		return nil, fmt.Errorf("leaf must have a type defined")
+	}
+	if stats.LeafCount < 0 || stats.ContentSize < 0 || stats.DagSize < 0 {
+		return nil, fmt.Errorf("root statistics cannot be negative")
 	}
 
 	merkleRoot := []byte{}
@@ -156,25 +167,16 @@ func (b *DagLeafBuilder) BuildRootLeaf(dag *DagBuilder, additionalData map[strin
 		if err != nil {
 			return nil, err
 		}
-
 		merkleRoot = merkleTree.Root
 	} else if len(b.Links) == 1 {
-		for _, link := range b.Links {
-			merkleRoot = []byte(link)
-			break
-		}
+		merkleRoot = []byte(b.Links[0])
 	}
 
-	dagObj := &Dag{Leafs: dag.Leafs}
-	contentSize := CalculateTotalContentSize(dagObj)
+	contentSize := stats.ContentSize
 	if b.Data != nil {
 		contentSize += int64(len(b.Data))
 	}
-
-	childrenDagSize, err := CalculateTotalDagSize(dagObj)
-	if err != nil {
-		return nil, fmt.Errorf("failed to calculate dag size: %w", err)
-	}
+	leafCount := stats.LeafCount + 1
 
 	tempLeafData := struct {
 		ItemName         string
@@ -191,7 +193,7 @@ func (b *DagLeafBuilder) BuildRootLeaf(dag *DagBuilder, additionalData map[strin
 		Type:             b.LeafType,
 		MerkleRoot:       merkleRoot,
 		CurrentLinkCount: len(b.Links),
-		LeafCount:        len(dag.Leafs) + 1,
+		LeafCount:        leafCount,
 		ContentSize:      contentSize,
 		DagSize:          0,
 		ContentHash:      nil,
@@ -207,12 +209,9 @@ func (b *DagLeafBuilder) BuildRootLeaf(dag *DagBuilder, additionalData map[strin
 	if err != nil {
 		return nil, err
 	}
-	rootLeafSize := int64(len(tempSerialized))
-
-	finalDagSize := childrenDagSize + rootLeafSize
+	finalDagSize := stats.DagSize + int64(len(tempSerialized))
 
 	additionalData = SortMapByKeys(additionalData)
-
 	leafData := struct {
 		ItemName         string
 		Type             LeafType
@@ -228,7 +227,7 @@ func (b *DagLeafBuilder) BuildRootLeaf(dag *DagBuilder, additionalData map[strin
 		Type:             b.LeafType,
 		MerkleRoot:       merkleRoot,
 		CurrentLinkCount: len(b.Links),
-		LeafCount:        len(dag.Leafs) + 1,
+		LeafCount:        leafCount,
 		ContentSize:      contentSize,
 		DagSize:          finalDagSize,
 		ContentHash:      tempLeafData.ContentHash,
@@ -246,28 +245,24 @@ func (b *DagLeafBuilder) BuildRootLeaf(dag *DagBuilder, additionalData map[strin
 		MhType:   mh.SHA2_256,
 		MhLength: -1,
 	}
-
 	c, err := pref.Sum(serializedLeafData)
 	if err != nil {
 		return nil, err
 	}
 
-	// Sort links for consistency (but only for directories, not files with chunks)
-	// For files, chunk order must be preserved for correct reconstruction
 	sortedLinks := b.Links
 	if b.LeafType == DirectoryLeafType {
-		sortedLinks = make([]string, len(b.Links))
-		copy(sortedLinks, b.Links)
+		sortedLinks = append([]string(nil), b.Links...)
 		sort.Strings(sortedLinks)
 	}
 
-	leaf := &DagLeaf{
+	return &DagLeaf{
 		Hash:              c.String(),
 		ItemName:          b.ItemName,
 		Type:              b.LeafType,
 		ClassicMerkleRoot: merkleRoot,
 		CurrentLinkCount:  len(b.Links),
-		LeafCount:         len(dag.Leafs) + 1,
+		LeafCount:         leafCount,
 		ContentSize:       contentSize,
 		DagSize:           finalDagSize,
 		Content:           b.Data,
@@ -276,9 +271,7 @@ func (b *DagLeafBuilder) BuildRootLeaf(dag *DagBuilder, additionalData map[strin
 		AdditionalData:    additionalData,
 		MerkleTree:        merkleTree,
 		LeafMap:           leafMap,
-	}
-
-	return leaf, nil
+	}, nil
 }
 
 func (leaf *DagLeaf) GetIndexForKey(key string) (int, bool) {

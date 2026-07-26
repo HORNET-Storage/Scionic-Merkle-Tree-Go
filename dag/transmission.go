@@ -378,20 +378,21 @@ func (d *Dag) finalizeBatch(batch *BatchedTransmissionPacket, parentsInBatch map
 		parentChildrenInBatch[parentHash] = append(parentChildrenInBatch[parentHash], childHash)
 	}
 
-	// Check if this is a partial DAG
+	// Index batch leaves once; large batches previously rescanned the entire
+	// slice for every parent.
+	batchLeaves := make(map[string]*DagLeaf, len(batch.Leaves))
+	for _, leaf := range batch.Leaves {
+		batchLeaves[leaf.Hash] = leaf
+	}
+
+	// Check if this is a partial DAG.
 	isPartial := d.IsPartial()
 
 	// For each parent IN THIS BATCH, ensure it has proofs for ALL its children
 	// BFS guarantees parent comes before children, so we set proofs when we see the parent
 	for parentHash := range parentsInBatch {
-		// Find the parent leaf IN THE BATCH (it's a clone, so we need to find it)
-		var parentLeafInBatch *DagLeaf
-		for _, leaf := range batch.Leaves {
-			if leaf.Hash == parentHash {
-				parentLeafInBatch = leaf
-				break
-			}
-		}
+		// Use the batch index instead of an O(parents × leaves) scan.
+		parentLeafInBatch := batchLeaves[parentHash]
 		if parentLeafInBatch == nil {
 			continue
 		}

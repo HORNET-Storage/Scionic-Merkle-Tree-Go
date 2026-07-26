@@ -66,49 +66,62 @@ func CalculateTotalContentSize(dag *Dag) int64 {
 	return totalSize
 }
 
+// SerializedLeafSize returns the exact number of bytes used by the canonical
+// non-root leaf representation counted in a root leaf's DagSize.
+func SerializedLeafSize(leaf *DagLeaf) (int64, error) {
+	if leaf == nil {
+		return 0, fmt.Errorf("cannot calculate size of nil leaf")
+	}
+
+	var linkHashes []string
+	if len(leaf.Links) > 0 {
+		linkHashes = append([]string(nil), leaf.Links...)
+		sort.Strings(linkHashes)
+	}
+
+	data := struct {
+		Hash              string
+		ItemName          string
+		Type              LeafType
+		ContentHash       []byte
+		Content           []byte
+		ClassicMerkleRoot []byte
+		CurrentLinkCount  int
+		LeafCount         int
+		ContentSize       int64
+		DagSize           int64
+		Links             []string
+		AdditionalData    map[string]string
+	}{
+		Hash:              leaf.Hash,
+		ItemName:          leaf.ItemName,
+		Type:              leaf.Type,
+		ContentHash:       leaf.ContentHash,
+		Content:           leaf.Content,
+		ClassicMerkleRoot: leaf.ClassicMerkleRoot,
+		CurrentLinkCount:  leaf.CurrentLinkCount,
+		LeafCount:         leaf.LeafCount,
+		ContentSize:       leaf.ContentSize,
+		DagSize:           leaf.DagSize,
+		Links:             linkHashes,
+		AdditionalData:    SortMapByKeys(leaf.AdditionalData),
+	}
+
+	serialized, err := cbor.Marshal(data)
+	if err != nil {
+		return 0, fmt.Errorf("failed to serialize leaf %s: %w", leaf.Hash, err)
+	}
+	return int64(len(serialized)), nil
+}
+
 func CalculateTotalDagSize(dag *Dag) (int64, error) {
 	var totalSize int64
 	for _, leaf := range dag.Leafs {
-		var linkHashes []string
-		if len(leaf.Links) > 0 {
-			linkHashes = make([]string, 0, len(leaf.Links))
-			linkHashes = append(linkHashes, leaf.Links...)
-			sort.Strings(linkHashes)
-		}
-
-		data := struct {
-			Hash              string
-			ItemName          string
-			Type              LeafType
-			ContentHash       []byte
-			Content           []byte
-			ClassicMerkleRoot []byte
-			CurrentLinkCount  int
-			LeafCount         int
-			ContentSize       int64
-			DagSize           int64
-			Links             []string
-			AdditionalData    map[string]string
-		}{
-			Hash:              leaf.Hash,
-			ItemName:          leaf.ItemName,
-			Type:              leaf.Type,
-			ContentHash:       leaf.ContentHash,
-			Content:           leaf.Content,
-			ClassicMerkleRoot: leaf.ClassicMerkleRoot,
-			CurrentLinkCount:  leaf.CurrentLinkCount,
-			LeafCount:         leaf.LeafCount,
-			ContentSize:       leaf.ContentSize,
-			DagSize:           leaf.DagSize,
-			Links:             linkHashes,
-			AdditionalData:    SortMapByKeys(leaf.AdditionalData),
-		}
-
-		serialized, err := cbor.Marshal(data)
+		size, err := SerializedLeafSize(leaf)
 		if err != nil {
-			return 0, fmt.Errorf("failed to serialize leaf %s: %w", leaf.Hash, err)
+			return 0, err
 		}
-		totalSize += int64(len(serialized))
+		totalSize += size
 	}
 	return totalSize, nil
 }
