@@ -777,8 +777,18 @@ func (ds *DagStore) GetContentFromLeaf(hash string) ([]byte, error) {
 
 // IterateDag iterates through the DAG structure, loading leaves on-demand.
 func (ds *DagStore) IterateDag(processLeaf func(leaf *DagLeaf, parent *DagLeaf) error) error {
+	// Content-identical chunk leaves are stored once and may be linked by more
+	// than one parent, so each unique leaf is visited exactly once — the same
+	// guard IterateDagStreaming already applies.
+	visited := make(map[string]bool)
+
 	var iterate func(leafHash string, parentHash *string) error
 	iterate = func(leafHash string, parentHash *string) error {
+		if visited[leafHash] {
+			return nil
+		}
+		visited[leafHash] = true
+
 		leaf, err := ds.RetrieveLeaf(leafHash)
 		if err != nil {
 			return err
@@ -1307,7 +1317,10 @@ func (ds *DagStore) verifyWithProofsStreaming() error {
 			continue
 		}
 		for _, childHash := range l.Links {
-			if _, ok := parentOf[childHash]; !ok {
+			// Lowest parent hash wins, so a leaf linked by several parents resolves
+			// identically on every run no matter what order
+			// collectAllLeafHashesForPartialDag returned.
+			if existing, ok := parentOf[childHash]; !ok || hash < existing {
 				parentOf[childHash] = hash
 			}
 		}

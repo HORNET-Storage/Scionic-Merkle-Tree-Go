@@ -141,8 +141,13 @@ func (d *Dag) GetLeafSequence() []*TransmissionPacket {
 					continue
 				}
 
-				// Build Merkle proof for this child
-				branch, err := d.buildVerificationBranch(childLeaf)
+				// Build the Merkle proof against the parent this packet actually
+				// declares. buildVerificationBranch resolves a parent through a
+				// map-ordered index, which picks an arbitrary parent when a
+				// content-identical leaf is linked by more than one parent, so the
+				// proof could belong to a different parent than ParentHash and fail
+				// verification depending on Go map iteration order.
+				proof, err := proofForChild(currentLeaf, childHash)
 				if err != nil {
 					// If we can't build proof, skip this leaf
 					continue
@@ -157,14 +162,8 @@ func (d *Dag) GetLeafSequence() []*TransmissionPacket {
 					Proofs:     make(map[string]*ClassicTreeBranch),
 				}
 
-				// Extract proofs from the verification branch
-				// The branch contains proofs at each level from leaf to root
-				for _, pathNode := range branch.Path {
-					if pathNode.Proofs != nil {
-						for k, v := range pathNode.Proofs {
-							packet.Proofs[k] = v
-						}
-					}
+				if proof != nil {
+					packet.Proofs[childHash] = proof
 				}
 
 				sequence = append(sequence, packet)
@@ -217,18 +216,16 @@ func (d *Dag) ApplyTransmissionPacket(packet *TransmissionPacket) {
 		}
 	}
 
-	// Apply proofs from the packet to parent leaves
-	// This is important for partial DAGs where proofs come in the packet
-	// For full DAGs, proofs are also provided in packets for verification
-	for leafHash, proof := range packet.Proofs {
-		// Find the parent leaf that has this child
-		for _, leaf := range d.Leafs {
-			if leaf.HasLink(leafHash) {
-				if leaf.Proofs == nil {
-					leaf.Proofs = make(map[string]*ClassicTreeBranch)
+	// Attach the proof to the parent this packet declares. Scanning d.Leafs for
+	// any leaf that links the child selected an arbitrary parent in map order, so
+	// a chunk shared by two parents could be given the wrong parent's proof.
+	if packet.ParentHash != "" {
+		if parent, exists := d.Leafs[packet.ParentHash]; exists {
+			if proof, ok := packet.Proofs[packet.Leaf.Hash]; ok {
+				if parent.Proofs == nil {
+					parent.Proofs = make(map[string]*ClassicTreeBranch)
 				}
-				leaf.Proofs[leafHash] = proof
-				break
+				parent.Proofs[packet.Leaf.Hash] = proof
 			}
 		}
 	}
@@ -241,6 +238,36 @@ func (d *Dag) ApplyAndVerifyTransmissionPacket(packet *TransmissionPacket) error
 
 	d.ApplyTransmissionPacket(packet)
 	return nil
+}
+
+// proofForChild builds the Merkle proof for childHash against the specific
+// parent leaf that links it, so a proof always corresponds to the parent the
+// caller names rather than to whichever parent a map happened to yield first.
+// Returns (nil, nil) when the parent has at most one link, matching the
+// condition under which VerifyTransmissionPacket requires no proof.
+func proofForChild(parent *DagLeaf, childHash string) (*ClassicTreeBranch, error) {
+	if parent == nil {
+		return nil, fmt.Errorf("cannot build a merkle proof without a parent leaf")
+	}
+	if len(parent.Links) <= 1 {
+		return nil, nil
+	}
+
+	builder := merkle_tree.CreateTree()
+	for _, linkHash := range parent.Links {
+		builder.AddLeaf(linkHash, linkHash)
+	}
+	merkleTree, _, err := builder.Build()
+	if err != nil {
+		return nil, err
+	}
+
+	index, exists := merkleTree.GetIndexForKey(childHash)
+	if !exists {
+		return nil, fmt.Errorf("unable to find index for key %s", childHash)
+	}
+
+	return &ClassicTreeBranch{Leaf: childHash, Proof: merkleTree.Proofs[index]}, nil
 }
 
 func (d *Dag) RemoveAllContent() {

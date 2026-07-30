@@ -317,8 +317,11 @@ func processFile(entry fs.DirEntry, fullPath string, path *string, dag *DagBuild
 		// We have multiple chunks - need to process them as child leaves
 		if chunkCount == 2 && singleChunk != nil {
 			// Process the first chunk we stored earlier
-			chunkEntryPath := filepath.Join(relPath, "0")
-			chunkBuilder := CreateDagLeafBuilder(chunkEntryPath)
+			// Chunk names are synthetic labels, not filesystem paths. Naming them
+			// with filepath.Join made the leaf CID depend on the OS that built the
+			// DAG ('\' on Windows, '/' elsewhere). A bare index matches
+			// processFileParallel and buildGitFileLeaf and is platform-independent.
+			chunkBuilder := CreateDagLeafBuilder("0")
 			chunkBuilder.SetType(ChunkLeafType)
 			chunkBuilder.SetData(singleChunk)
 
@@ -333,8 +336,8 @@ func processFile(entry fs.DirEntry, fullPath string, path *string, dag *DagBuild
 		}
 
 		// Process current chunk
-		chunkEntryPath := filepath.Join(relPath, strconv.Itoa(index))
-		chunkBuilder := CreateDagLeafBuilder(chunkEntryPath)
+		chunkItemName := strconv.Itoa(index)
+		chunkBuilder := CreateDagLeafBuilder(chunkItemName)
 		chunkBuilder.SetType(ChunkLeafType)
 		chunkBuilder.SetData(chunk)
 
@@ -837,11 +840,16 @@ func (d *Dag) verifyWithProofs() error {
 		current := leaf
 		for current.Hash != d.Root {
 			// Find parent in this partial DAG
+			// Choose the lowest-hash parent rather than whichever one map order
+			// produced first, so a leaf linked by several parents resolves to the
+			// same parent on every run.
 			var parent *DagLeaf
 			for _, potential := range d.Leafs {
-				if potential.HasLink(current.Hash) {
+				if !potential.HasLink(current.Hash) {
+					continue
+				}
+				if parent == nil || potential.Hash < parent.Hash {
 					parent = potential
-					break
 				}
 			}
 			if parent == nil {
@@ -946,7 +954,7 @@ func (dag *Dag) GetContentFromLeaf(leaf *DagLeaf) ([]byte, error) {
 	var content []byte
 
 	if len(leaf.Links) > 0 {
-		// For chunked files, sort chunks by ItemName (which is just "0", "1", "2", ...)
+		// Chunk leaves are named with a bare index ("0", "1", "2", ...).
 		// Create a sortable slice of link info
 		type linkInfo struct {
 			hash     string
@@ -968,20 +976,10 @@ func (dag *Dag) GetContentFromLeaf(leaf *DagLeaf) ([]byte, error) {
 			})
 		}
 
-		// Sort by ItemName (extract numeric part from path-based names like "bundle/0", "bundle/1")
+		// Order by chunk index. compareChunkItemNames also accepts the legacy
+		// path-prefixed names written by older builders on either platform.
 		sort.Slice(links, func(i, j int) bool {
-			// Extract the basename (last component) from the path
-			baseI := filepath.Base(links[i].itemName)
-			baseJ := filepath.Base(links[j].itemName)
-
-			// Convert to int for proper numeric sorting
-			numI, errI := strconv.Atoi(baseI)
-			numJ, errJ := strconv.Atoi(baseJ)
-			if errI != nil || errJ != nil {
-				// Fallback to string comparison if conversion fails
-				return links[i].itemName < links[j].itemName
-			}
-			return numI < numJ
+			return compareChunkItemNames(links[i].itemName, links[j].itemName)
 		})
 
 		// Concatenate content in sorted order
@@ -997,27 +995,27 @@ func (dag *Dag) GetContentFromLeaf(leaf *DagLeaf) ([]byte, error) {
 }
 
 func (d *Dag) IterateDag(processLeaf func(leaf *DagLeaf, parent *DagLeaf) error) error {
+	// A Scionic DAG is a directed acyclic graph, not a tree: content-identical
+	// chunk leaves are stored once and may be linked by more than one parent.
+	// Walking per link would hand the same leaf to processLeaf repeatedly and
+	// inflate any count derived from this walk, so each unique leaf is visited
+	// exactly once.
+	visited := make(map[string]bool, len(d.Leafs))
+
 	var iterate func(leafHash string, parentHash *string) error
 	iterate = func(leafHash string, parentHash *string) error {
-		var leaf *DagLeaf
-		for hash, l := range d.Leafs {
-			if hash == leafHash {
-				leaf = l
-				break
-			}
-		}
+		leaf := d.Leafs[leafHash]
 		if leaf == nil {
 			return fmt.Errorf("child is missing when iterating dag (hash: %s)", leafHash)
 		}
+		if visited[leafHash] {
+			return nil
+		}
+		visited[leafHash] = true
 
 		var parent *DagLeaf
 		if parentHash != nil {
-			for hash, l := range d.Leafs {
-				if hash == *parentHash {
-					parent = l
-					break
-				}
-			}
+			parent = d.Leafs[*parentHash]
 		}
 
 		err := processLeaf(leaf, parent)
@@ -1078,12 +1076,26 @@ func (d *Dag) pruneIrrelevantLinks(relevantHashes map[string]bool) {
 	}
 }
 
-// compareChunkItemNames orders chunk leaves by the numeric suffix of their
-// ItemName (e.g. "file/0", "file/1", ...), falling back to lexical order.
+// chunkIndexFromItemName extracts a chunk's numeric index from its ItemName.
+// Chunks are named with a bare index ("0", "1", ...). DAGs written by older
+// builders used a path-prefixed name whose separator depended on the operating
+// system that created them ("file/0" on Unix, "file\0" on Windows), so both
+// separators are accepted here; otherwise a Windows-authored DAG read on Unix
+// would fall back to lexical order and reassemble chunk 10 before chunk 2.
+func chunkIndexFromItemName(name string) (int, bool) {
+	if cut := strings.LastIndexAny(name, `/\`); cut >= 0 {
+		name = name[cut+1:]
+	}
+	index, err := strconv.Atoi(name)
+	return index, err == nil
+}
+
+// compareChunkItemNames orders chunk leaves by chunk index, falling back to
+// lexical order when an ItemName carries no numeric index.
 func compareChunkItemNames(a, b string) bool {
-	numA, errA := strconv.Atoi(filepath.Base(a))
-	numB, errB := strconv.Atoi(filepath.Base(b))
-	if errA != nil || errB != nil {
+	numA, okA := chunkIndexFromItemName(a)
+	numB, okB := chunkIndexFromItemName(b)
+	if !okA || !okB {
 		return a < b
 	}
 	return numA < numB
@@ -1112,7 +1124,11 @@ func (d *Dag) buildParentIndex() map[string]string {
 	parentOf := make(map[string]string, len(d.Leafs))
 	for _, leaf := range d.Leafs {
 		for _, childHash := range leaf.Links {
-			if _, ok := parentOf[childHash]; !ok {
+			// A content-identical leaf can be linked by several parents. Keeping
+			// whichever parent map iteration happened to yield first made this
+			// index — and every proof derived from it — depend on Go's randomized
+			// map order, so pin it to the lowest parent hash instead.
+			if existing, ok := parentOf[childHash]; !ok || leaf.Hash < existing {
 				parentOf[childHash] = leaf.Hash
 			}
 		}
@@ -1333,12 +1349,59 @@ func (d *Dag) GetPartial(leafHashes []string, pruneLinks bool) (*Dag, error) {
 		}
 	}
 
+	// A chunk whose bytes match another file's chunk is stored once and linked
+	// by several parents. Every routine that resolves "the" parent of a leaf
+	// picks just one of them, so a proof stored under a single parent verified
+	// or failed depending on which parent the verifier happened to choose. Give
+	// each parent its own proof; proofs are not part of a leaf's CID, so this
+	// changes no hash.
+	if err := d.completeParentProofs(partialDag); err != nil {
+		return nil, err
+	}
+
 	// Optionally prune irrelevant links from the partial DAG
 	if pruneLinks {
 		partialDag.pruneIrrelevantLinks(relevantHashes)
 	}
 
 	return partialDag, nil
+}
+
+// completeParentProofs gives every parent in the partial its own Merkle proof
+// for each child it links. Proofs are always computed from the full DAG's
+// parent links, so a pruned partial can never yield a proof built against the
+// wrong tree. Proofs already present are left untouched.
+func (d *Dag) completeParentProofs(partial *Dag) error {
+	for parentHash, partialParent := range partial.Leafs {
+		fullParent := d.Leafs[parentHash]
+		if fullParent == nil || len(fullParent.Links) <= 1 {
+			continue
+		}
+
+		for _, childHash := range fullParent.Links {
+			if _, inPartial := partial.Leafs[childHash]; !inPartial {
+				continue
+			}
+			if _, exists := partialParent.Proofs[childHash]; exists {
+				continue
+			}
+
+			proof, err := proofForChild(fullParent, childHash)
+			if err != nil {
+				return err
+			}
+			if proof == nil {
+				continue
+			}
+
+			if partialParent.Proofs == nil {
+				partialParent.Proofs = make(map[string]*ClassicTreeBranch)
+			}
+			partialParent.Proofs[childHash] = proof
+		}
+	}
+
+	return nil
 }
 
 // CalculateLabels populates the Labels map with deterministic label assignments.

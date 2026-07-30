@@ -148,15 +148,12 @@ func FromSerializable(s *SerializableDag) *Dag {
 		}
 	}
 
-	// Third pass: reconstruct parent hashes via a single child->parent index
-	parentOf := make(map[string]string, len(dag.Leafs))
-	for _, potential := range dag.Leafs {
-		for _, childHash := range potential.Links {
-			if _, ok := parentOf[childHash]; !ok {
-				parentOf[childHash] = potential.Hash
-			}
-		}
-	}
+	// Third pass: reconstruct parent hashes via a single child->parent index.
+	// buildParentIndex already resolves a content-identical leaf's several
+	// parents to the lowest parent hash; the local copy this replaced kept
+	// whichever parent map iteration yielded first, so a shared chunk's
+	// ParentHash changed from one deserialization of the same bytes to the next.
+	parentOf := dag.buildParentIndex()
 	for hash, leaf := range dag.Leafs {
 		if parentHash, ok := parentOf[hash]; ok {
 			leaf.ParentHash = parentHash
