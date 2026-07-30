@@ -67,18 +67,18 @@ To further enhance the functionality of Scionic Merkle Trees and support efficie
 
 ## Install
 ```
-go get github.com/HORNET-Storage/Scionic-Merkle-Tree/dag
+go get github.com/HORNET-Storage/Scionic-Merkle-Tree/v2/dag
 ```
 
 ## Example Usage
-There are good examples inside the dag/dag_test.go file, but below is a basic example to get you started. This library is intended to be very simple while still allowing for powerful usage...
+There are good examples inside the `tests/` package (start with `tests/dag_test.go`), but below is a basic example to get you started. This library is intended to be very simple while still allowing for powerful usage...
 
 Turn a folder and its files into a Scionic Merkle DAG-Tree, verify, then convert the Scionic Merkle tree back to the original files in a new directory:
 ```go
 input := filepath.Join(tmpDir, "input")
 output := filepath.Join(tmpDir, "output")
 
-// Set chunk size for file processing (optional - defaults to 262144 bytes)
+// Set chunk size for file processing (optional - defaults to 2 MB)
 SetChunkSize(4096)
 
 // Create DAG from directory with timestamp in root
@@ -136,7 +136,7 @@ SetChunkSize(1024 * 1024) // 1MB chunks
 // Disable chunking entirely (files processed as single chunks)
 DisableChunking()
 
-// Reset to default chunk size (262144 bytes)
+// Reset to default chunk size (2 MB)
 SetDefaultChunkSize()
 ```
 
@@ -148,18 +148,22 @@ It is not required to understand how this works but if you plan to build the tre
 ### Dag Leaf
 ```go
 type DagLeaf struct {
-	Hash              string
-	ItemName          string
-	Type              LeafType
-	ContentHash       []byte
-	Content           []byte
-	ClassicMerkleRoot []byte
-	CurrentLinkCount  int
-	LatestLabel       string
-	LeafCount         int
-	Links             map[string]string
-	ParentHash        string
-	AdditionalData    map[string]string
+	Hash              string                          `json:"hash"`
+	ItemName          string                          `json:"item_name"`
+	Type              LeafType                        `json:"type"`
+	ContentHash       []byte                          `json:"content_hash,omitempty"`
+	Content           []byte                          `json:"content,omitempty"`
+	ClassicMerkleRoot []byte                          `json:"classic_merkle_root,omitempty"`
+	CurrentLinkCount  int                             `json:"current_link_count"`
+	LeafCount         int                             `json:"leaf_count,omitempty"`
+	ContentSize       int64                           `json:"content_size,omitempty"`
+	DagSize           int64                           `json:"dag_size,omitempty"`
+	Links             []string                        `json:"links,omitempty"`
+	ParentHash        string                          `json:"parent_hash,omitempty"`
+	AdditionalData    map[string]string               `json:"additional_data,omitempty"`
+	MerkleTree        *merkletree.MerkleTree          `json:"-"`
+	LeafMap           map[string]merkletree.DataBlock `json:"-"`
+	Proofs            map[string]*ClassicTreeBranch   `json:"proofs,omitempty"`
 }
 ```
 
@@ -175,8 +179,9 @@ The hash field is a cid, encoded as a string, of the following fields serialized
 - AdditionalData
 
 Only the root leaf has these fields included in the hash
-- LatestLabel
 - LeafCount
+- ContentSize
+- DagSize
 
 ### ItemName: string
 This can be anything but our usage is the file name including the type so that we can accurately re-create a directory / file with all the files and types intact
@@ -214,19 +219,32 @@ This also means we do not need to include the links in the leaf hash because thi
 ### CurrentLinkCount: int
 This is the count of how many links a leaf has and it's included in the leaf hash to ensure that we always know and can verify how many links a leaf should have which prevents any lying about the number of children when verifying branches or partial trees.
 
-### LatestLabel: string
-We label every child leaf in the dag where the root starts at 0 and each leaf that gets built becomes the next integer. Because these are included in the classic merkle tree, and the classic merkle root is included in the leaf hash, we can now reference leaves by their root hash and number instead of their root hash and their leaf hash.
-This is stored as a string as it is appended to the cid (Hash) of each leaf. It's important to remember that labelling is not per leaf but per dag.
+### ContentSize: int64
+The total size of all content held by the dag's leaves, counted once per unique leaf. Because the store is content addressed, a chunk shared by two files is one leaf and is therefore counted once. Stored and hashed only in the root leaf.
+
+### DagSize: int64
+The total serialized size of the dag. Stored and hashed only in the root leaf.
+
+### Labelling
+Labelling is per dag rather than per leaf, and lives on the `Dag` itself as `Labels map[string]string` (label -> leaf hash, excluding the root which is always "0"). Call `CalculateLabels()` to populate it; it is deterministic because it assigns in `IterateDag` traversal order. There is no `LatestLabel` field on a leaf.
 
 ### LeafCount: int
 The overall number of leaves that the entire dag contains which is why this is only stored and hashed in the root leaf, it ensures you can always know if you have all of the children or not.
 
-### Links: map[string]string
-The links to all of the children of a leaf where the key is the label and the value is the label:cid of the child
+### Links: []string
+The hashes of a leaf's children, in order. Links are **not** part of the leaf hash — the ClassicMerkleRoot stands in for them — so link order is not cryptographically pinned and must never be trusted for correctness.
+
+Because of that, chunk reassembly does not read link order at all. Every path that rebuilds file content (`Dag.GetContentFromLeaf`, `DagLeaf.CreateDirectoryLeaf`, and the streaming `DagStore` equivalents) re-sorts the children by the chunk's **numeric `ItemName` index** using `compareChunkItemNames`. That comparator also strips a legacy path prefix (`"file/0"` on Unix, `"file\0"` on Windows) before parsing the index, so a dag authored on one platform and read on another still orders chunk 2 before chunk 10 rather than falling back to lexical order.
+
+Link order *is* still preserved verbatim through serialization, and links must be held in an ordered sequence rather than a set or map — but the authoritative ordering key is the ItemName index, not the link position.
+
+One asymmetry worth knowing when building leaves by hand: `BuildLeaf` sorts links lexicographically **only** for `DirectoryLeafType`. File leaves keep their insertion order.
 
 ### ParentHash: string
-We add the parent hash (label:cid) to the child leaf to make traversal upwards possible but this is purely for speed and the parent it points to should still be verified as we can't include the parent hash inside of the leaf hash.
+The hash of the leaf's parent, added to make upward traversal possible. This is purely for speed and the parent it points to should still be verified, as we can't include the parent hash inside of the leaf hash.
 This is because the parent hash doesn't exist yet, the leaf hashes are created from bottom to top, despite dag creation starting at the top.
+
+Note that a content-identical chunk can be linked by **several** parents, so "the" parent is a choice. It is resolved deterministically to the **lowest parent hash** (`buildParentIndex`); resolving it by Go's randomized map order made proofs and reconstructed parent hashes differ from run to run.
 
 ### AdditionalData: map[string]string
 This map is included in the leaf hash allowing for developers to add additional data to the dag leaves if and when needed.
@@ -244,8 +262,7 @@ func CreateDagCustom(path string, rootAdditionalData map[string]string, processo
 func CreateDagBuilder() *DagBuilder
 func (b *DagBuilder) AddLeaf(leaf *DagLeaf, parentLeaf *DagLeaf) error
 func (b *DagBuilder) BuildDag(root string) *Dag
-func (b *DagBuilder) GetLatestLabel() string
-func (b *DagBuilder) GetNextAvailableLabel() string
+func (b *DagBuilder) Stats() DagStats
 ```
 
 ### DAG Operations
@@ -254,7 +271,7 @@ func (dag *Dag) Verify() error
 func (dag *Dag) CreateDirectory(path string) error
 func (dag *Dag) GetContentFromLeaf(leaf *DagLeaf) ([]byte, error)
 func (dag *Dag) IterateDag(processLeaf func(leaf *DagLeaf, parent *DagLeaf) error) error
-func (dag *Dag) GetPartial(start, end int) (*Dag, error)
+func (d *Dag) GetPartial(leafHashes []string, pruneLinks bool) (*Dag, error)
 func ReadDag(path string) (*Dag, error)
 ```
 
@@ -291,7 +308,7 @@ func SetDefaultChunkSize()
 func CreateDagLeafBuilder(name string) *DagLeafBuilder
 func (b *DagLeafBuilder) SetType(leafType LeafType)
 func (b *DagLeafBuilder) SetData(data []byte)
-func (b *DagLeafBuilder) AddLink(label string, hash string)
+func (b *DagLeafBuilder) AddLink(hash string)
 func (b *DagLeafBuilder) BuildLeaf(additionalData map[string]string) (*DagLeaf, error)
 func (b *DagLeafBuilder) BuildRootLeaf(dag *DagBuilder, additionalData map[string]string) (*DagLeaf, error)
 ```
@@ -301,19 +318,27 @@ func (b *DagLeafBuilder) BuildRootLeaf(dag *DagBuilder, additionalData map[strin
 func (leaf *DagLeaf) GetBranch(key string) (*ClassicTreeBranch, error)
 func (leaf *DagLeaf) VerifyBranch(branch *ClassicTreeBranch) error
 func (leaf *DagLeaf) VerifyLeaf() error
-func (leaf *DagLeaf) VerifyRootLeaf() error
+func (leaf *DagLeaf) VerifyRootLeaf(dag *Dag) error
 func (leaf *DagLeaf) CreateDirectoryLeaf(path string, dag *Dag) error
 func (leaf *DagLeaf) HasLink(hash string) bool
 func (leaf *DagLeaf) AddLink(hash string)
 func (leaf *DagLeaf) Clone() *DagLeaf
-func (leaf *DagLeaf) SetLabel(label string)
 ```
 
-### Testing Utilities
+### Labels
 ```go
-func GenerateDummyDirectory(path string, minItems, maxItems, minDepth, maxDepth int)
-func FindRandomChild(leaf *DagLeaf, leafs map[string]*DagLeaf) *DagLeaf
-func CreateDummyLeaf(name string) (*DagLeaf, error)
+func (d *Dag) CalculateLabels() error
+func (d *Dag) ClearLabels()
+```
+
+### Batching (LeafSync transmission)
+```go
+const DefaultBatchSize = 4 * 1024 * 1024 // 4 MB
+
+func SetBatchSize(size int)
+func DisableBatching()
+func SetDefaultBatchSize()
+func (d *Dag) GetBatchedLeafSequence() []*BatchedTransmissionPacket
 ```
 
 ## Advanced Features
@@ -328,7 +353,7 @@ packets := dag.GetLeafSequence()
 
 // Create a new DAG to receive transmitted leaves
 receiverDag := &Dag{
-  Leaves: make(map[string]*DagLeaf),
+  Leafs: make(map[string]*DagLeaf),
   // ... other initialization
 }
 
@@ -357,7 +382,7 @@ for _, packet := range packets {
 The library provides flexible file chunking options:
 
 #### Default Chunking
-Files are automatically split into chunks of 262,144 bytes (256KB) by default:
+Files are automatically split into chunks of 2,097,152 bytes (2 MB) by default:
 ```go
 // Uses default chunk size
 dag, err := CreateDag("./directory", true)
@@ -396,7 +421,7 @@ SetChunkSize(-1)
 
 #### Reset to Default
 ```go
-// Reset back to default 262,144 byte chunks
+// Reset back to default 2 MB chunks
 SetDefaultChunkSize()
 ```
 
