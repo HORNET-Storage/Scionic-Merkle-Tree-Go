@@ -13,27 +13,44 @@ import (
 // large repositories.
 var strictCBORDecMode cbor.DecMode
 
-// deterministicCBOREncMode makes encoding reproducible.
+// Wire encoding uses fxamacker's DEFAULT mode -- plain cbor.Marshal, Sort:
+// SortNone -- so struct fields ride the wire in declaration order, the exact
+// shape deployed Go v2.2.6 peers produce, the version pinned by
+// HORNETS-Nostr-Relay and hdk-nostr-go.
 //
-// fxamacker's default is Sort: SortNone, which for a Go map means Go's
-// deliberately randomized map iteration order. Every type below carries at least
-// one map -- Leafs, Proofs, Relationships, AdditionalData -- so without this,
-// encoding the same DAG twice in the same process can produce different bytes.
-// That was not theoretical: generating the spec-vector corpus three times
-// produced three different dag.cbor files for identical input.
+// Determinism comes from the map fields alone. Every type below carries at least
+// one map -- Leafs, AdditionalData, StoredProofs, Proofs, Relationships -- and
+// Go's map iteration is deliberately randomized, so encoding the same DAG twice
+// in one process used to produce different bytes. That was not theoretical:
+// generating the spec-vector corpus three times produced three different
+// dag.cbor files for identical input.
 //
 // It never corrupted anything, because a CID is computed from leaf fields rather
-// than from this envelope and CBOR maps are unordered to any decoder. But it
+// than from this envelope, and CBOR maps are unordered to any decoder. But it
 // makes the serialized form unusable as an identity: you cannot digest it, cache
 // by it, dedupe on it, diff it, or compare two ports' output byte for byte. The
 // last of those is what the spec-vector corpus needs.
 //
-// SortBytewiseLexical is RFC 8949 core-deterministic ordering. Every map key in
-// this format is a CID string of uniform length, so bytewise and length-first
-// ordering coincide for them -- the choice only shows up on struct fields, and
-// the pinned leaf-CBOR byte constants prove whether that reordering is
-// acceptable.
-var deterministicCBOREncMode cbor.EncMode
+// The first fix here was a sorted EncMode. It did make encoding reproducible,
+// but fxamacker's Sort applies to struct fields too, so it also reordered every
+// field on the wire -- and the Swift port's CrossCompatWireTests caught that
+// against golden bytes captured from a real deployed build. The ordering is now
+// scoped to maps alone through the sortedMap type in sortedmap.go, which every
+// map field below is declared as.
+//
+// `omitempty` is the second half of that scoping, and it could not be delegated
+// either. fxamacker returns `encodeMarshalerType, alwaysNotEmpty` for any type
+// implementing cbor.Marshaler, so simply declaring the map fields as sortedMap
+// silently disabled `omitempty` on them -- in BOTH OmitEmpty modes, because the
+// isEmpty function is chosen from the type rather than the mode. Every leaf in a
+// full DAG began carrying an empty stored_proofs it had never carried before:
+// 11 leaves, 11 stray keys, 8182 bytes where the ports had agreed on 8017.
+//
+// So the two structs that own an `omitempty` map -- SerializableDagLeaf and
+// SerializableTransmissionPacket -- encode themselves, via encodeCBORStruct in
+// sortedmap.go. The other two have no `omitempty` field and are left to
+// fxamacker. The struct tags below stay as they are: encoding/json still reads
+// them, and they document the wire contract the marshalers implement.
 
 func init() {
 	mode, err := cbor.DecOptions{
@@ -46,17 +63,11 @@ func init() {
 		panic(err)
 	}
 	strictCBORDecMode = mode
-
-	encMode, err := cbor.EncOptions{Sort: cbor.SortBytewiseLexical}.EncMode()
-	if err != nil {
-		panic(err)
-	}
-	deterministicCBOREncMode = encMode
 }
 
 type SerializableDag struct {
 	Root  string
-	Leafs map[string]*SerializableDagLeaf
+	Leafs sortedMap[*SerializableDagLeaf]
 }
 
 type SerializableDagLeaf struct {
@@ -71,19 +82,56 @@ type SerializableDagLeaf struct {
 	ContentSize       int64
 	DagSize           int64
 	Links             []string
-	AdditionalData    map[string]string
-	StoredProofs      map[string]*ClassicTreeBranch `json:"stored_proofs,omitempty" cbor:"stored_proofs,omitempty"`
+	AdditionalData    sortedMap[string]
+	StoredProofs      sortedMap[*ClassicTreeBranch] `json:"stored_proofs,omitempty" cbor:"stored_proofs,omitempty"`
+}
+
+// MarshalCBOR writes the leaf in declaration order, sorting its map fields and
+// applying stored_proofs' `omitempty` by hand. See encodeCBORStruct for why this
+// cannot be left to fxamacker.
+func (leaf *SerializableDagLeaf) MarshalCBOR() ([]byte, error) {
+	pairs := []cborPair{
+		{"Hash", leaf.Hash},
+		{"ItemName", leaf.ItemName},
+		{"Type", leaf.Type},
+		{"ContentHash", leaf.ContentHash},
+		{"Content", leaf.Content},
+		{"ClassicMerkleRoot", leaf.ClassicMerkleRoot},
+		{"CurrentLinkCount", leaf.CurrentLinkCount},
+		{"LeafCount", leaf.LeafCount},
+		{"ContentSize", leaf.ContentSize},
+		{"DagSize", leaf.DagSize},
+		{"Links", leaf.Links},
+		{"AdditionalData", leaf.AdditionalData},
+	}
+	if len(leaf.StoredProofs) > 0 {
+		pairs = append(pairs, cborPair{"stored_proofs", leaf.StoredProofs})
+	}
+	return encodeCBORStruct(pairs)
 }
 
 type SerializableTransmissionPacket struct {
 	Leaf       *SerializableDagLeaf
 	ParentHash string
-	Proofs     map[string]*ClassicTreeBranch `json:"proofs,omitempty" cbor:"proofs,omitempty"`
+	Proofs     sortedMap[*ClassicTreeBranch] `json:"proofs,omitempty" cbor:"proofs,omitempty"`
+}
+
+// MarshalCBOR writes the packet in declaration order, sorting Proofs and
+// applying its `omitempty` by hand. See encodeCBORStruct for why.
+func (packet *SerializableTransmissionPacket) MarshalCBOR() ([]byte, error) {
+	pairs := []cborPair{
+		{"Leaf", packet.Leaf},
+		{"ParentHash", packet.ParentHash},
+	}
+	if len(packet.Proofs) > 0 {
+		pairs = append(pairs, cborPair{"proofs", packet.Proofs})
+	}
+	return encodeCBORStruct(pairs)
 }
 
 type SerializableBatchedTransmissionPacket struct {
 	Leaves        []*SerializableDagLeaf
-	Relationships map[string]string
+	Relationships sortedMap[string]
 	PacketIndex   int
 	TotalPackets  int
 }
@@ -229,7 +277,7 @@ func (leaf *DagLeaf) ToSerializable() *SerializableDagLeaf {
 
 func (dag *Dag) ToCBOR() ([]byte, error) {
 	serializable := dag.ToSerializable()
-	return deterministicCBOREncMode.Marshal(serializable)
+	return cbor.Marshal(serializable)
 }
 
 func (dag *Dag) ToJSON() ([]byte, error) {
@@ -323,7 +371,7 @@ func TransmissionPacketFromSerializable(s *SerializableTransmissionPacket) *Tran
 // ToCBOR serializes a TransmissionPacket to CBOR format
 func (packet *TransmissionPacket) ToCBOR() ([]byte, error) {
 	serializable := packet.ToSerializable()
-	return deterministicCBOREncMode.Marshal(serializable)
+	return cbor.Marshal(serializable)
 }
 
 // ToJSON serializes a TransmissionPacket to JSON format
@@ -428,7 +476,7 @@ func BatchedTransmissionPacketFromSerializable(s *SerializableBatchedTransmissio
 // ToCBOR serializes a BatchedTransmissionPacket to CBOR format
 func (packet *BatchedTransmissionPacket) ToCBOR() ([]byte, error) {
 	serializable := packet.ToSerializable()
-	return deterministicCBOREncMode.Marshal(serializable)
+	return cbor.Marshal(serializable)
 }
 
 // ToJSON serializes a BatchedTransmissionPacket to JSON format
