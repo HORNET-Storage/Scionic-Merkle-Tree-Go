@@ -1118,22 +1118,41 @@ func safeJoin(base, name string) (string, error) {
 	return child, nil
 }
 
-// buildParentIndex returns a child-hash -> parent-hash map for O(1) parent
-// lookups (avoids scanning every leaf for each path step).
-func (d *Dag) buildParentIndex() map[string]string {
-	parentOf := make(map[string]string, len(d.Leafs))
-	for _, leaf := range d.Leafs {
-		for _, childHash := range leaf.Links {
-			// A content-identical leaf can be linked by several parents. Keeping
-			// whichever parent map iteration happened to yield first made this
-			// index — and every proof derived from it — depend on Go's randomized
-			// map order, so pin it to the lowest parent hash instead.
-			if existing, ok := parentOf[childHash]; !ok || leaf.Hash < existing {
-				parentOf[childHash] = leaf.Hash
+// minimumParentIndex resolves each child to its LOWEST parent hash.
+//
+// A content-identical chunk leaf can be linked by several parents, so "the"
+// parent of a shared leaf is only well defined if every code path picks the same
+// one. This is that single rule, and every path that derives a child -> parent
+// mapping routes through it: the in-memory index below, and the store index in
+// store.go. Keeping whichever parent happened to be seen first made the answer
+// depend on Go's randomized map order in one path and on BFS traversal order in
+// the other, so the same DAG reported different ParentHash values depending on
+// whether it had been deserialized or loaded from a store.
+//
+// Taking the minimum is independent of iteration order, so this is deterministic
+// even though it ranges over a map.
+func minimumParentIndex(children map[string][]string) map[string]string {
+	parentOf := make(map[string]string, len(children))
+	for parentHash, childHashes := range children {
+		for _, childHash := range childHashes {
+			if existing, ok := parentOf[childHash]; !ok || parentHash < existing {
+				parentOf[childHash] = parentHash
 			}
 		}
 	}
 	return parentOf
+}
+
+// buildParentIndex returns a child-hash -> parent-hash map for O(1) parent
+// lookups (avoids scanning every leaf for each path step).
+func (d *Dag) buildParentIndex() map[string]string {
+	children := make(map[string][]string, len(d.Leafs))
+	for _, leaf := range d.Leafs {
+		if len(leaf.Links) > 0 {
+			children[leaf.Hash] = leaf.Links
+		}
+	}
+	return minimumParentIndex(children)
 }
 
 // buildVerificationBranch creates a branch containing the leaf and its verification path

@@ -13,6 +13,27 @@ import (
 )
 
 // LeafStore defines the interface for storing and retrieving DAG leaves.
+//
+// Ownership contract, and it runs both directions:
+//
+//   - StoreLeaf must not retain the caller's *DagLeaf. Store a Clone.
+//   - RetrieveLeaf must not hand back a pointer the caller can mutate into
+//     stored state. Return a Clone.
+//
+// Both halves are required, and one without the other is worth almost nothing:
+// DagStore.RetrieveLeaf re-attaches separately stored content by assigning
+// leaf.Content, and UpdateParentHashesStreaming assigns leaf.ParentHash. Against
+// a store that returns its own pointer, those writes land inside the store --
+// silently re-inlining every payload into the metadata store that exists
+// precisely to stay small.
+//
+// Content is the one documented exception, and it is the same exception Clone()
+// already makes: the payload is shared rather than copied, because a leaf's CID
+// commits to sha256(Content), so those bytes are immutable by construction.
+// Replace Content wholesale; never write through it. The Rust port enforces this
+// structurally -- its content lives behind an Arc that hands out no &mut -- and
+// passes the same suite, which is the evidence that nothing in this library
+// needs to write through a payload.
 type LeafStore interface {
 	StoreLeaf(leaf *DagLeaf) error
 	RetrieveLeaf(hash string) (*DagLeaf, error)
@@ -75,7 +96,9 @@ func NewMemoryLeafStore() *MemoryLeafStore {
 func (s *MemoryLeafStore) StoreLeaf(leaf *DagLeaf) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.leaves[leaf.Hash] = leaf
+	// Clone on the way in: the caller keeps its own leaf and is free to keep
+	// mutating it. See the LeafStore ownership contract.
+	s.leaves[leaf.Hash] = leaf.Clone()
 	return nil
 }
 
@@ -86,7 +109,9 @@ func (s *MemoryLeafStore) RetrieveLeaf(hash string) (*DagLeaf, error) {
 	if !exists {
 		return nil, nil
 	}
-	return leaf, nil
+	// Clone on the way out for the mirror-image reason: DagStore.RetrieveLeaf
+	// assigns Content onto whatever comes back from here.
+	return leaf.Clone(), nil
 }
 
 func (s *MemoryLeafStore) HasLeaf(hash string) (bool, error) {
@@ -107,7 +132,7 @@ func (s *MemoryLeafStore) StoreLeaves(leaves []*DagLeaf) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for _, leaf := range leaves {
-		s.leaves[leaf.Hash] = leaf
+		s.leaves[leaf.Hash] = leaf.Clone()
 	}
 	return nil
 }
@@ -118,7 +143,7 @@ func (s *MemoryLeafStore) RetrieveLeaves(hashes []string) (map[string]*DagLeaf, 
 	result := make(map[string]*DagLeaf)
 	for _, hash := range hashes {
 		if leaf, exists := s.leaves[hash]; exists {
-			result[hash] = leaf
+			result[hash] = leaf.Clone()
 		}
 	}
 	return result, nil
@@ -129,7 +154,7 @@ func (s *MemoryLeafStore) GetAllLeaves() map[string]*DagLeaf {
 	defer s.mu.RUnlock()
 	result := make(map[string]*DagLeaf, len(s.leaves))
 	for k, v := range s.leaves {
-		result[k] = v
+		result[k] = v.Clone()
 	}
 	return result
 }
@@ -482,18 +507,25 @@ func (ds *DagStore) BuildIndex() error {
 func (ds *DagStore) buildIndexFromCache(relationships map[string]string) error {
 	index := NewDagIndex()
 
-	// First pass: Build Parents map and Children map from relationships
+	// First pass: rebuild the parent -> children direction from the cache.
 	for childHash, parentHash := range relationships {
-		index.Parents[childHash] = parentHash
-
-		// Build reverse mapping for Children
 		if parentHash != "" {
 			index.Children[parentHash] = append(index.Children[parentHash], childHash)
 		}
 	}
 
+	// A RelationshipCache stores one parent per child, so a shared chunk's other
+	// parent edges are already discarded before we get here and this direction
+	// cannot be re-derived from them. Route it through the same single rule as
+	// every other path anyway, so a cache that does supply canonical parents stays
+	// canonical. The contract that follows from that: GetCachedRelationships must
+	// report the LOWEST parent hash for a child with several parents, or return
+	// nil so the caller falls back to full traversal.
+	index.Parents = minimumParentIndex(index.Children)
+	index.Parents[ds.Root] = ""
+
 	// Second pass: BFS traversal to build LeafHashes in correct order
-	// This ensures parent leaves come before children, required for transmission verification
+	// This ensures parent leaves come before children, required for transmission
 	visited := make(map[string]bool)
 	queue := []string{ds.Root}
 
@@ -509,8 +541,9 @@ func (ds *DagStore) buildIndexFromCache(relationships map[string]string) error {
 		// Add to LeafHashes in BFS order
 		index.LeafHashes = append(index.LeafHashes, current)
 
-		// Queue children for processing (use sorted order for determinism)
-		children := index.Children[current]
+		// Queue children for processing (sorted copy, for determinism -- sorting
+		// index.Children in place would reorder the index's own stored edges)
+		children := append([]string(nil), index.Children[current]...)
 		sort.Strings(children)
 		for _, childHash := range children {
 			if !visited[childHash] {
@@ -538,24 +571,21 @@ func (ds *DagStore) buildIndexByTraversal() error {
 	visited := make(map[string]bool)
 
 	// BFS traversal to build index - processes one leaf at a time
-	queue := []struct {
-		hash       string
-		parentHash string
-	}{{hash: ds.Root, parentHash: ""}}
+	queue := []string{ds.Root}
 
 	for len(queue) > 0 {
 		current := queue[0]
 		queue = queue[1:]
 
-		if visited[current.hash] {
+		if visited[current] {
 			continue
 		}
-		visited[current.hash] = true
+		visited[current] = true
 
 		// Load leaf temporarily - only need hash and links
-		leaf, err := ds.leafStore.RetrieveLeaf(current.hash)
+		leaf, err := ds.leafStore.RetrieveLeaf(current)
 		if err != nil {
-			return fmt.Errorf("failed to retrieve leaf %s: %w", current.hash, err)
+			return fmt.Errorf("failed to retrieve leaf %s: %w", current, err)
 		}
 		if leaf == nil {
 			// Leaf not found - skip (might be partial DAG)
@@ -563,31 +593,37 @@ func (ds *DagStore) buildIndexByTraversal() error {
 		}
 
 		// Store in index
-		index.LeafHashes = append(index.LeafHashes, current.hash)
-		index.Parents[current.hash] = current.parentHash
+		index.LeafHashes = append(index.LeafHashes, current)
 
 		// Copy children hashes before discarding leaf
 		if len(leaf.Links) > 0 {
 			children := make([]string, len(leaf.Links))
 			copy(children, leaf.Links)
-			index.Children[current.hash] = children
+			index.Children[current] = children
 
 			// Queue children for processing
 			for _, childHash := range children {
 				if !visited[childHash] {
-					queue = append(queue, struct {
-						hash       string
-						parentHash string
-					}{hash: childHash, parentHash: current.hash})
+					queue = append(queue, childHash)
 				}
 			}
 		}
 
 		// Update leaf count from root
-		if current.hash == ds.Root {
+		if current == ds.Root {
 			ds.LeafCount = leaf.LeafCount
 		}
 	}
+
+	// The walk above fixes LeafHashes order (parents before children, which
+	// transmission requires) and collects every parent -> children edge. The
+	// child -> parent direction is resolved only now, because a shared chunk's
+	// FIRST-SEEN parent depends on traversal order while its ParentHash must not:
+	// FromSerializable pins ParentHash to the lowest parent hash, so a store load
+	// has to agree with a deserialization of the same DAG. Recording the traversal
+	// parent here is exactly what made those two disagree.
+	index.Parents = minimumParentIndex(index.Children)
+	index.Parents[ds.Root] = ""
 
 	ds.index = index
 	ds.indexBuilt = true

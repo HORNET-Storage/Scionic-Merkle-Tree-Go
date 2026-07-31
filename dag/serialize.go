@@ -13,6 +13,28 @@ import (
 // large repositories.
 var strictCBORDecMode cbor.DecMode
 
+// deterministicCBOREncMode makes encoding reproducible.
+//
+// fxamacker's default is Sort: SortNone, which for a Go map means Go's
+// deliberately randomized map iteration order. Every type below carries at least
+// one map -- Leafs, Proofs, Relationships, AdditionalData -- so without this,
+// encoding the same DAG twice in the same process can produce different bytes.
+// That was not theoretical: generating the spec-vector corpus three times
+// produced three different dag.cbor files for identical input.
+//
+// It never corrupted anything, because a CID is computed from leaf fields rather
+// than from this envelope and CBOR maps are unordered to any decoder. But it
+// makes the serialized form unusable as an identity: you cannot digest it, cache
+// by it, dedupe on it, diff it, or compare two ports' output byte for byte. The
+// last of those is what the spec-vector corpus needs.
+//
+// SortBytewiseLexical is RFC 8949 core-deterministic ordering. Every map key in
+// this format is a CID string of uniform length, so bytewise and length-first
+// ordering coincide for them -- the choice only shows up on struct fields, and
+// the pinned leaf-CBOR byte constants prove whether that reordering is
+// acceptable.
+var deterministicCBOREncMode cbor.EncMode
+
 func init() {
 	mode, err := cbor.DecOptions{
 		MaxNestedLevels:  256,
@@ -24,6 +46,12 @@ func init() {
 		panic(err)
 	}
 	strictCBORDecMode = mode
+
+	encMode, err := cbor.EncOptions{Sort: cbor.SortBytewiseLexical}.EncMode()
+	if err != nil {
+		panic(err)
+	}
+	deterministicCBOREncMode = encMode
 }
 
 type SerializableDag struct {
@@ -201,7 +229,7 @@ func (leaf *DagLeaf) ToSerializable() *SerializableDagLeaf {
 
 func (dag *Dag) ToCBOR() ([]byte, error) {
 	serializable := dag.ToSerializable()
-	return cbor.Marshal(serializable)
+	return deterministicCBOREncMode.Marshal(serializable)
 }
 
 func (dag *Dag) ToJSON() ([]byte, error) {
@@ -295,7 +323,7 @@ func TransmissionPacketFromSerializable(s *SerializableTransmissionPacket) *Tran
 // ToCBOR serializes a TransmissionPacket to CBOR format
 func (packet *TransmissionPacket) ToCBOR() ([]byte, error) {
 	serializable := packet.ToSerializable()
-	return cbor.Marshal(serializable)
+	return deterministicCBOREncMode.Marshal(serializable)
 }
 
 // ToJSON serializes a TransmissionPacket to JSON format
@@ -400,7 +428,7 @@ func BatchedTransmissionPacketFromSerializable(s *SerializableBatchedTransmissio
 // ToCBOR serializes a BatchedTransmissionPacket to CBOR format
 func (packet *BatchedTransmissionPacket) ToCBOR() ([]byte, error) {
 	serializable := packet.ToSerializable()
-	return cbor.Marshal(serializable)
+	return deterministicCBOREncMode.Marshal(serializable)
 }
 
 // ToJSON serializes a BatchedTransmissionPacket to JSON format

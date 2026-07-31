@@ -754,11 +754,15 @@ func (leaf *DagLeaf) Clone() *DagLeaf {
 
 // cloneBytes copies a byte slice while preserving the nil / empty distinction.
 //
-// That distinction is hash-visible in this library: a nil ClassicMerkleRoot and
-// a zero-length one do not serialize the same way, and 28 of the shared fixture
-// leaves carry a non-nil zero-length root. The obvious one-liner,
-// append([]byte(nil), src...), returns nil for an empty input and would rewrite
-// exactly those leaves, so this uses make + copy instead.
+// That distinction is hash-visible in this library: a nil ClassicMerkleRoot
+// serializes as CBOR 0xf6 while a zero-length one serializes as 0x40, and every
+// zero-link leaf built by BuildLeaf carries a non-nil zero-length root -- 26 of
+// the 42 leaves across the six standard fixtures, and not one of them nil. The
+// obvious one-liner, append([]byte(nil), src...), returns nil for an empty input
+// and would rewrite exactly those leaves, so this uses make + copy instead.
+//
+// Trust the invariant (zero-link leaf => non-nil empty root), not the count: the
+// count read 28 here until someone actually counted the fixtures.
 func cloneBytes(src []byte) []byte {
 	if src == nil {
 		return nil

@@ -54,4 +54,10 @@ debug/
 # Logs
 *.log
 
-main.go
+# A scratch main.go at the repo root, ignored so manual testing does not get
+# committed. Anchored with a leading slash on purpose: unanchored, `main.go`
+# matches at ANY depth, which silently excluded tools/specvectors/main.go -- the
+# generator for the committed spec-vector corpus. The corpus would have been
+# committed without the program that produces it, and nothing would have said so
+# until someone tried to regenerate it.
+/main.go
