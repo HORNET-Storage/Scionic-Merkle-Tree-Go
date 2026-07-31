@@ -146,7 +146,8 @@ func TestSpecVectorFullDagsParseAndVerify(t *testing.T) {
 // which is why this assertion is one of the seven rather than a Go-only test.
 func TestSpecVectorFullDagCBORIsDeterministic(t *testing.T) {
 	for _, vectorCase := range loadSpecVectorManifest(t).Cases {
-		d, err := dag.FromCBOR(readSpecVectorFile(t, vectorCase.FullDag))
+		committed := readSpecVectorFile(t, vectorCase.FullDag)
+		d, err := dag.FromCBOR(committed)
 		if err != nil {
 			t.Fatalf("%s: could not decode full DAG: %v", vectorCase.Name, err)
 		}
@@ -158,6 +159,13 @@ func TestSpecVectorFullDagCBORIsDeterministic(t *testing.T) {
 		second, err := d.ToCBOR()
 		if err != nil {
 			t.Fatalf("%s: could not re-encode full DAG: %v", vectorCase.Name, err)
+		}
+		// Go generates this corpus, so unlike in Rust and Swift this comparison is
+		// not a cross-port check -- it is the "you changed the wire format and did
+		// not regenerate" alarm. Its absence is exactly why a field-order regression
+		// once passed 118/118 here while Swift's golden bytes caught it.
+		if !bytes.Equal(first, committed) {
+			t.Errorf("%s: re-encoded DAG differs from the committed bytes", vectorCase.Name)
 		}
 		if !bytes.Equal(first, second) {
 			t.Errorf("%s: encoding the same DAG twice produced different bytes", vectorCase.Name)
@@ -264,7 +272,8 @@ func TestSpecVectorTransmissionPacketsReplay(t *testing.T) {
 		receiver := &dag.Dag{Root: vectorCase.RootHash, Leafs: make(map[string]*dag.DagLeaf)}
 
 		for _, packetPath := range vectorCase.TransmissionPackets {
-			packet, err := dag.TransmissionPacketFromCBOR(readSpecVectorFile(t, packetPath))
+			committed := readSpecVectorFile(t, packetPath)
+			packet, err := dag.TransmissionPacketFromCBOR(committed)
 			if err != nil {
 				t.Fatalf("%s: could not decode %s: %v", vectorCase.Name, packetPath, err)
 			}
@@ -276,6 +285,9 @@ func TestSpecVectorTransmissionPacketsReplay(t *testing.T) {
 			second, err := packet.ToCBOR()
 			if err != nil {
 				t.Fatalf("%s: could not re-encode %s: %v", vectorCase.Name, packetPath, err)
+			}
+			if !bytes.Equal(first, committed) {
+				t.Errorf("%s: re-encoded %s differs from the committed bytes", vectorCase.Name, packetPath)
 			}
 			if !bytes.Equal(first, second) {
 				t.Errorf("%s: encoding %s twice produced different bytes", vectorCase.Name, packetPath)
@@ -306,7 +318,8 @@ func TestSpecVectorBatchedPacketsReplay(t *testing.T) {
 		receiver := &dag.Dag{Root: vectorCase.RootHash, Leafs: make(map[string]*dag.DagLeaf)}
 
 		for _, batchPath := range vectorCase.BatchedPackets {
-			batch, err := dag.BatchedTransmissionPacketFromCBOR(readSpecVectorFile(t, batchPath))
+			committed := readSpecVectorFile(t, batchPath)
+			batch, err := dag.BatchedTransmissionPacketFromCBOR(committed)
 			if err != nil {
 				t.Fatalf("%s: could not decode %s: %v", vectorCase.Name, batchPath, err)
 			}
@@ -318,6 +331,9 @@ func TestSpecVectorBatchedPacketsReplay(t *testing.T) {
 			second, err := batch.ToCBOR()
 			if err != nil {
 				t.Fatalf("%s: could not re-encode %s: %v", vectorCase.Name, batchPath, err)
+			}
+			if !bytes.Equal(first, committed) {
+				t.Errorf("%s: re-encoded %s differs from the committed bytes", vectorCase.Name, batchPath)
 			}
 			if !bytes.Equal(first, second) {
 				t.Errorf("%s: encoding %s twice produced different bytes", vectorCase.Name, batchPath)
