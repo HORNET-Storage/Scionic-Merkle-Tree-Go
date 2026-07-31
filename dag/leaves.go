@@ -688,14 +688,41 @@ func (leaf *DagLeaf) AddLink(hash string) {
 	leaf.Links = append(leaf.Links, hash)
 }
 
+// Clone returns a copy of the leaf that is safe to modify, with exactly one
+// documented exception: Content is shared with the original.
+//
+// Content is deliberately not copied. It is the only field that can be
+// megabytes, and the transmission paths clone every leaf in the DAG --
+// GetBatchedLeafSequence measured roughly 25x slower when Content was copied
+// there. Every other field, including the small hash fields and the proof
+// branches, is fully independent after this call.
+//
+// The rule for Content is therefore: REASSIGN it, never write THROUGH it.
+//
+//	clone.Content = buf        // fine, the original is untouched
+//	clone.Content[0] ^= 0xFF   // NOT fine, this lands in the source DAG
+//
+// A write through the slice silently invalidates the source leaf's ContentHash
+// and makes the DAG it came from fail verification. To mutate bytes, copy
+// first:
+//
+//	buf := append([]byte(nil), clone.Content...)
+//	buf[0] ^= 0xFF
+//	clone.Content = buf
+//
+// ContentHash and ClassicMerkleRoot used to be shared the same way, which was a
+// live trap rather than a theoretical one: index-writing a clone's
+// ClassicMerkleRoot corrupted the DAG it was cloned from. Both are at most 59
+// bytes, so copying them costs nothing measurable and removes the trap
+// entirely.
 func (leaf *DagLeaf) Clone() *DagLeaf {
 	cloned := &DagLeaf{
 		Hash:              leaf.Hash,
 		ItemName:          leaf.ItemName,
 		Type:              leaf.Type,
-		Content:           leaf.Content,
-		ContentHash:       leaf.ContentHash,
-		ClassicMerkleRoot: leaf.ClassicMerkleRoot,
+		Content:           leaf.Content, // shared on purpose -- see the doc comment
+		ContentHash:       cloneBytes(leaf.ContentHash),
+		ClassicMerkleRoot: cloneBytes(leaf.ClassicMerkleRoot),
 		CurrentLinkCount:  leaf.CurrentLinkCount,
 		LeafCount:         leaf.LeafCount,
 		ContentSize:       leaf.ContentSize,
@@ -706,20 +733,58 @@ func (leaf *DagLeaf) Clone() *DagLeaf {
 		Proofs:            make(map[string]*ClassicTreeBranch),
 	}
 
-	// Deep copy slices and maps
 	cloned.Links = append(cloned.Links, leaf.Links...)
 	for k, v := range leaf.AdditionalData {
 		cloned.AdditionalData[k] = v
 	}
-	if leaf.Proofs != nil {
-		for k, v := range leaf.Proofs {
-			cloned.Proofs[k] = v
-		}
+	// Proof values are pointers, so allocating a fresh map is not enough on its
+	// own -- every branch would still be shared with the original. A branch is a
+	// handful of 32-byte hashes, so copying them outright is cheaper than
+	// reasoning about which callers might write through one.
+	for k, v := range leaf.Proofs {
+		cloned.Proofs[k] = cloneBranch(v)
 	}
 
-	// MerkleTree and LeafMap are not deep-copied because they're regenerated when needed
-	// But we preserve the ClassicMerkleRoot which is part of the leaf's identity
+	// MerkleTree and LeafMap are transient and regenerated on demand, so they are
+	// intentionally left nil. ClassicMerkleRoot is preserved because it is part
+	// of the leaf's identity.
 
+	return cloned
+}
+
+// cloneBytes copies a byte slice while preserving the nil / empty distinction.
+//
+// That distinction is hash-visible in this library: a nil ClassicMerkleRoot and
+// a zero-length one do not serialize the same way, and 28 of the shared fixture
+// leaves carry a non-nil zero-length root. The obvious one-liner,
+// append([]byte(nil), src...), returns nil for an empty input and would rewrite
+// exactly those leaves, so this uses make + copy instead.
+func cloneBytes(src []byte) []byte {
+	if src == nil {
+		return nil
+	}
+	out := make([]byte, len(src))
+	copy(out, src)
+	return out
+}
+
+// cloneBranch copies a proof branch, including its sibling hashes, so a cloned
+// leaf's proofs cannot be mutated through into the leaf it came from.
+func cloneBranch(src *ClassicTreeBranch) *ClassicTreeBranch {
+	if src == nil {
+		return nil
+	}
+	cloned := &ClassicTreeBranch{Leaf: src.Leaf}
+	if src.Proof != nil {
+		proof := &merkletree.Proof{Path: src.Proof.Path}
+		if src.Proof.Siblings != nil {
+			proof.Siblings = make([][]byte, len(src.Proof.Siblings))
+			for i, sibling := range src.Proof.Siblings {
+				proof.Siblings[i] = cloneBytes(sibling)
+			}
+		}
+		cloned.Proof = proof
+	}
 	return cloned
 }
 
