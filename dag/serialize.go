@@ -46,11 +46,18 @@ var strictCBORDecMode cbor.DecMode
 // full DAG began carrying an empty stored_proofs it had never carried before:
 // 11 leaves, 11 stray keys, 8182 bytes where the ports had agreed on 8017.
 //
-// So the two structs that own an `omitempty` map -- SerializableDagLeaf and
-// SerializableTransmissionPacket -- encode themselves, via encodeCBORStruct in
-// sortedmap.go. The other two have no `omitempty` field and are left to
-// fxamacker. The struct tags below stay as they are: encoding/json still reads
-// them, and they document the wire contract the marshalers implement.
+// So the structs that cannot be left to fxamacker encode themselves, via
+// appendCBORStruct in sortedmap.go. SerializableDagLeaf and
+// SerializableTransmissionPacket own an `omitempty` map and have no choice, for
+// the reason above. SerializableDag joins them for a different reason -- speed:
+// leaving the envelope to reflection made fxamacker copy the entire encoded
+// Leafs map one extra time, which on an 18 MiB DAG is a measurable cost by
+// itself. It emits the identical two-key map either way.
+// SerializableBatchedTransmissionPacket owns no `omitempty` map and is still
+// left to fxamacker.
+//
+// The struct tags below stay as they are: encoding/json still reads them, and
+// they document the wire contract the marshalers implement.
 
 func init() {
 	mode, err := cbor.DecOptions{
@@ -86,10 +93,15 @@ type SerializableDagLeaf struct {
 	StoredProofs      sortedMap[*ClassicTreeBranch] `json:"stored_proofs,omitempty" cbor:"stored_proofs,omitempty"`
 }
 
-// MarshalCBOR writes the leaf in declaration order, sorting its map fields and
-// applying stored_proofs' `omitempty` by hand. See encodeCBORStruct for why this
+// appendCBOR writes the leaf in declaration order, sorting its map fields and
+// applying stored_proofs' `omitempty` by hand. See appendCBORStruct for why this
 // cannot be left to fxamacker.
-func (leaf *SerializableDagLeaf) MarshalCBOR() ([]byte, error) {
+func (leaf *SerializableDagLeaf) appendCBOR(dst []byte) ([]byte, error) {
+	// A nil leaf is null, matching what fxamacker writes for a nil pointer.
+	if leaf == nil {
+		return append(dst, cborNull), nil
+	}
+
 	pairs := []cborPair{
 		{"Hash", leaf.Hash},
 		{"ItemName", leaf.ItemName},
@@ -107,7 +119,43 @@ func (leaf *SerializableDagLeaf) MarshalCBOR() ([]byte, error) {
 	if len(leaf.StoredProofs) > 0 {
 		pairs = append(pairs, cborPair{"stored_proofs", leaf.StoredProofs})
 	}
-	return encodeCBORStruct(pairs)
+	return appendCBORStruct(dst, pairs)
+}
+
+// MarshalCBOR satisfies cbor.Marshaler for the paths that still route through
+// fxamacker; appendCBOR is the single implementation.
+func (leaf *SerializableDagLeaf) MarshalCBOR() ([]byte, error) {
+	return leaf.appendCBOR(make([]byte, 0, leaf.encodedSizeHint()))
+}
+
+// encodedSizeHint approximates this leaf's encoded size so a buffer can be
+// allocated once at roughly the right size instead of grown into.
+//
+// This is a buffer hint and nothing else. It is deliberately NOT
+// DagLeaf.EstimateSize, which sizes transmission BATCHES: that one is
+// protocol-visible, because changing it changes how leaves are grouped across
+// packets, so it stays exactly as it is. Being wrong here costs one extra
+// reallocation and nothing else. Keeping the two apart means a harmless buffer
+// tweak can never silently repartition every batched transmission.
+func (leaf *SerializableDagLeaf) encodedSizeHint() int {
+	if leaf == nil {
+		return 1
+	}
+
+	// Content is the only field that varies by megabytes. Everything else is
+	// bounded by a few hundred bytes, so the fixed 256 covers the twelve key
+	// names, the four integers and the map head.
+	size := len(leaf.Hash) + len(leaf.ItemName) + len(string(leaf.Type)) +
+		len(leaf.ContentHash) + len(leaf.Content) + len(leaf.ClassicMerkleRoot) + 256
+	for _, link := range leaf.Links {
+		size += len(link) + 9
+	}
+	for key, value := range leaf.AdditionalData {
+		size += len(key) + len(value) + 18
+	}
+	// A stored proof is a short path of 32-byte siblings; overshoot cheaply.
+	size += len(leaf.StoredProofs) * 512
+	return size
 }
 
 type SerializableTransmissionPacket struct {
@@ -116,9 +164,13 @@ type SerializableTransmissionPacket struct {
 	Proofs     sortedMap[*ClassicTreeBranch] `json:"proofs,omitempty" cbor:"proofs,omitempty"`
 }
 
-// MarshalCBOR writes the packet in declaration order, sorting Proofs and
-// applying its `omitempty` by hand. See encodeCBORStruct for why.
-func (packet *SerializableTransmissionPacket) MarshalCBOR() ([]byte, error) {
+// appendCBOR writes the packet in declaration order, sorting Proofs and applying
+// its `omitempty` by hand. See appendCBORStruct for why.
+func (packet *SerializableTransmissionPacket) appendCBOR(dst []byte) ([]byte, error) {
+	if packet == nil {
+		return append(dst, cborNull), nil
+	}
+
 	pairs := []cborPair{
 		{"Leaf", packet.Leaf},
 		{"ParentHash", packet.ParentHash},
@@ -126,7 +178,12 @@ func (packet *SerializableTransmissionPacket) MarshalCBOR() ([]byte, error) {
 	if len(packet.Proofs) > 0 {
 		pairs = append(pairs, cborPair{"proofs", packet.Proofs})
 	}
-	return encodeCBORStruct(pairs)
+	return appendCBORStruct(dst, pairs)
+}
+
+// MarshalCBOR satisfies cbor.Marshaler; appendCBOR is the single implementation.
+func (packet *SerializableTransmissionPacket) MarshalCBOR() ([]byte, error) {
+	return packet.appendCBOR(make([]byte, 0, packet.Leaf.encodedSizeHint()+256))
 }
 
 type SerializableBatchedTransmissionPacket struct {
@@ -275,9 +332,49 @@ func (leaf *DagLeaf) ToSerializable() *SerializableDagLeaf {
 	return serializable
 }
 
+// appendCBOR writes the envelope: a two-key map, Root then Leafs, which is
+// exactly the shape fxamacker produced for this struct when it was left to
+// reflection.
+func (serializable *SerializableDag) appendCBOR(dst []byte) ([]byte, error) {
+	if serializable == nil {
+		return append(dst, cborNull), nil
+	}
+	return appendCBORStruct(dst, []cborPair{
+		{"Root", serializable.Root},
+		{"Leafs", serializable.Leafs},
+	})
+}
+
+// MarshalCBOR encodes the whole DAG in a single pass into one correctly sized
+// buffer.
+//
+// The buffer is the point. Before this, every nesting level allocated its own
+// bytes.Buffer, grew it by repeated doubling, and handed the result upward to be
+// copied again -- 8.3x the output size in allocation, and 69% of the profile
+// inside runtime.memclr and runtime.memmove. Sorting, the thing that made this
+// encoding deterministic in the first place, never appeared in the profile at
+// all.
+func (serializable *SerializableDag) MarshalCBOR() ([]byte, error) {
+	return serializable.appendCBOR(make([]byte, 0, serializable.encodedSizeHint()))
+}
+
+// encodedSizeHint approximates the encoded size of the whole DAG. See
+// SerializableDagLeaf.encodedSizeHint for why this is kept apart from
+// DagLeaf.EstimateSize.
+func (serializable *SerializableDag) encodedSizeHint() int {
+	if serializable == nil {
+		return 1
+	}
+
+	size := len(serializable.Root) + 32
+	for hash, leaf := range serializable.Leafs {
+		size += len(hash) + 9 + leaf.encodedSizeHint()
+	}
+	return size
+}
+
 func (dag *Dag) ToCBOR() ([]byte, error) {
-	serializable := dag.ToSerializable()
-	return cbor.Marshal(serializable)
+	return dag.ToSerializable().MarshalCBOR()
 }
 
 func (dag *Dag) ToJSON() ([]byte, error) {

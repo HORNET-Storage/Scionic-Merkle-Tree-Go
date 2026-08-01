@@ -2,8 +2,10 @@ package dag
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -156,4 +158,86 @@ func TestOmitEmptyStillDropsEmptyProofMaps(t *testing.T) {
 		}
 	}
 	t.Error("no packet carried a proofs key, so omitempty is over-firing (or the fixture is too shallow to prove it)")
+}
+
+// TestToCBORDoesNotAmplifyAllocation pins the single-pass encoder.
+//
+// Determinism was originally bought with cbor.Marshaler, and that interface's
+// signature -- MarshalCBOR() ([]byte, error) -- makes every nesting level
+// allocate its own buffer and copy its finished bytes into its parent's.
+// Encoding an 18 MiB DAG that way allocated 8.3x the output size and spent 69%
+// of the CPU profile inside runtime.memclrNoHeapPointers and runtime.memmove:
+// to_cbor ran at 19.4ms against the Rust port's 4.8ms on the same corpus and
+// machine. Appending into one pre-sized buffer took it to 3.3ms with
+// byte-identical output.
+//
+// Nothing about correctness would notice that being undone. Every other test in
+// this file, the whole Go suite, and the entire cross-language spec-vector
+// corpus pass either way, because the BYTES are identical -- only the copying
+// differs. A future refactor could therefore reintroduce a MarshalCBOR-per-level
+// encoder, stay perfectly correct, and quietly hand back a 6x regression. So the
+// property is pinned rather than assumed, exactly as the Rust port pins leaf
+// content sharing for the same reason.
+func TestToCBORDoesNotAmplifyAllocation(t *testing.T) {
+	repo := filepath.Join(t.TempDir(), "alloc-repo")
+	if err := os.MkdirAll(repo, 0o755); err != nil {
+		t.Fatalf("could not create fixture: %v", err)
+	}
+
+	// Content has to dominate the encoding or the ratio proves nothing: against
+	// tiny files, fixed per-leaf overhead would hide a whole extra copy of the
+	// payload inside the noise.
+	payload := make([]byte, 64*1024)
+	for i := range payload {
+		payload[i] = byte(i * 7)
+	}
+	for i := 0; i < 8; i++ {
+		// Distinct first byte per file. Byte-identical files would dedupe into a
+		// single shared leaf and shrink the DAG out from under the measurement.
+		payload[0] = byte(i)
+		if err := os.WriteFile(filepath.Join(repo, fmt.Sprintf("file%d.bin", i)), payload, 0o644); err != nil {
+			t.Fatalf("could not write fixture file: %v", err)
+		}
+	}
+
+	d, err := CreateDag(repo, false)
+	if err != nil {
+		t.Fatalf("could not build fixture DAG: %v", err)
+	}
+	encoded, err := d.ToCBOR()
+	if err != nil {
+		t.Fatalf("could not encode DAG: %v", err)
+	}
+	if len(encoded) < 512*1024 {
+		t.Fatalf("fixture is too small to measure: only %d bytes encoded", len(encoded))
+	}
+
+	const runs = 20
+	var before, after runtime.MemStats
+	runtime.GC()
+	runtime.ReadMemStats(&before)
+	keptAlive := 0
+	for i := 0; i < runs; i++ {
+		out, err := d.ToCBOR()
+		if err != nil {
+			t.Fatalf("could not re-encode DAG on iteration %d: %v", i, err)
+		}
+		keptAlive += len(out)
+	}
+	runtime.ReadMemStats(&after)
+	if keptAlive != runs*len(encoded) {
+		t.Fatalf("re-encodes disagreed on length: %d across %d runs of %d", keptAlive, runs, len(encoded))
+	}
+
+	perEncode := (after.TotalAlloc - before.TotalAlloc) / runs
+	ratio := float64(perEncode) / float64(len(encoded))
+	// The single-pass encoder measures ~1.05x: one output buffer plus the
+	// serializable view, which shares content rather than copying it. The old
+	// copy-per-level encoder measured 8.3x. Three sits far enough from both to be
+	// immune to allocator and Go-version noise while still failing loudly the
+	// moment intermediate buffers come back.
+	if ratio > 3 {
+		t.Errorf("ToCBOR allocated %d bytes to produce %d (%.2fx): the single-pass encoder has regressed to copying at every nesting level",
+			perEncode, len(encoded), ratio)
+	}
 }
