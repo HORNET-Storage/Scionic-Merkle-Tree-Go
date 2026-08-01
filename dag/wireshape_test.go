@@ -241,3 +241,56 @@ func TestToCBORDoesNotAmplifyAllocation(t *testing.T) {
 			perEncode, len(encoded), ratio)
 	}
 }
+
+// TestAppendCBORMatchesToCBORAndAppends pins AppendCBOR as the same encoder as
+// ToCBOR rather than a second one.
+//
+// AppendCBOR exists only so a caller can reuse a buffer: encoding now runs at the
+// floor set by allocating the output and copying into it, so about half of a
+// repeated encoder's time goes on allocating a fresh buffer and faulting it in --
+// 1.8ms against 3.4ms on the benchmark corpus. Nothing about correctness would
+// notice the two paths drifting apart, since each would still be internally
+// consistent, so the agreement is asserted. The Rust port pins the identical
+// property for Dag::to_cbor_into.
+func TestAppendCBORMatchesToCBORAndAppends(t *testing.T) {
+	d := buildWireShapeFixture(t)
+	expected, err := d.ToCBOR()
+	if err != nil {
+		t.Fatalf("could not encode DAG: %v", err)
+	}
+
+	fresh, err := d.AppendCBOR(nil)
+	if err != nil {
+		t.Fatalf("could not append-encode DAG: %v", err)
+	}
+	if !bytes.Equal(fresh, expected) {
+		t.Fatal("AppendCBOR(nil) diverged from ToCBOR")
+	}
+
+	// Appending, not overwriting: the prefix survives and the encoding lands
+	// after it.
+	prefix := []byte("scionic")
+	appended, err := d.AppendCBOR(append([]byte(nil), prefix...))
+	if err != nil {
+		t.Fatalf("could not append-encode onto a prefix: %v", err)
+	}
+	if !bytes.Equal(appended[:len(prefix)], prefix) {
+		t.Error("AppendCBOR clobbered the caller's existing bytes")
+	}
+	if !bytes.Equal(appended[len(prefix):], expected) {
+		t.Error("AppendCBOR wrote different bytes than ToCBOR")
+	}
+
+	// The reuse case the method exists for: one buffer, many encodes. Stale
+	// capacity must never leak old bytes into a new encoding.
+	buf := make([]byte, 0, len(expected))
+	for i := 0; i < 8; i++ {
+		buf, err = d.AppendCBOR(buf[:0])
+		if err != nil {
+			t.Fatalf("could not re-append-encode on iteration %d: %v", i, err)
+		}
+		if !bytes.Equal(buf, expected) {
+			t.Fatalf("reused buffer diverged on iteration %d", i)
+		}
+	}
+}
