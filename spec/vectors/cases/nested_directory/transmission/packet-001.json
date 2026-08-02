@@ -1,0 +1,31 @@
+{
+  "Leaf": {
+    "Hash": "bafireigqkqotdzv3kfqx7nuwpyjyesl45bbwtjkqchqcbnfewv7ixxq7vi",
+    "ItemName": "subdir1",
+    "Type": "directory",
+    "ContentHash": null,
+    "Content": null,
+    "ClassicMerkleRoot": "p1/MBQG+oUdU1zkbyYVRdUKCN76c0NuCrooLQW3I2NI=",
+    "CurrentLinkCount": 2,
+    "LeafCount": 0,
+    "ContentSize": 0,
+    "DagSize": 0,
+    "Links": [
+      "bafireiajknre47ttxov4u3tnjspttrllz5oqd64b2kltbekq7yj4yzyytu",
+      "bafireiclvajwah7xiuovy472nzkoarwkbgbbxh2fb6hbkc7lthddyjrcxy"
+    ],
+    "AdditionalData": {}
+  },
+  "ParentHash": "bafireiekzu7qss4gcgk3ochl3ehk3ee3rmsqjdh7bin4twzdhkgsfw2kme",
+  "proofs": {
+    "bafireigqkqotdzv3kfqx7nuwpyjyesl45bbwtjkqchqcbnfewv7ixxq7vi": {
+      "Leaf": "bafireigqkqotdzv3kfqx7nuwpyjyesl45bbwtjkqchqcbnfewv7ixxq7vi",
+      "Proof": {
+        "Siblings": [
+          "/X1eh+na4NNAzBeAP3zWOmWxVv0nklKtp+Zx+xND1F4="
+        ],
+        "Path": 1
+      }
+    }
+  }
+}

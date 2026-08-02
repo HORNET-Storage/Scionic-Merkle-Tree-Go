@@ -1,0 +1,17 @@
+{
+  "Leaf": {
+    "Hash": "bafireidqxbmhp2ykqyzna7qfsbbudolvnce2y2yuxiq2jfc4a5u7m67azu",
+    "ItemName": "gamma.txt",
+    "Type": "file",
+    "ContentHash": "mww1Z2g/bVGY1xSwDEDfMDn3cXulymXCtmF2iLY7Qvo=",
+    "Content": "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTA==",
+    "ClassicMerkleRoot": "",
+    "CurrentLinkCount": 0,
+    "LeafCount": 0,
+    "ContentSize": 0,
+    "DagSize": 0,
+    "Links": [],
+    "AdditionalData": {}
+  },
+  "ParentHash": "bafireid22tajdviexnfyqgt7qiybwvamusy4esm7mrw5y2tzk4k6ccscli"
+}

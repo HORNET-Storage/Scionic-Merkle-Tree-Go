@@ -1,0 +1,21 @@
+{
+  "Leaf": {
+    "Hash": "bafireidpgfh4qypwpbkx2g5th4hz3t4eotvmafgeg6d4vttxchsyt5mcai",
+    "ItemName": "large.txt",
+    "Type": "file",
+    "ContentHash": null,
+    "Content": null,
+    "ClassicMerkleRoot": "XTSyFEcyXQSzaXgmJvCpsUbX1P3DpUu+KCxadTpXFn4=",
+    "CurrentLinkCount": 3,
+    "LeafCount": 0,
+    "ContentSize": 0,
+    "DagSize": 0,
+    "Links": [
+      "bafireies24kuiuasdujtruusoedrzh4icwms5uuu3m6uxqlrznpwgukd6u",
+      "bafireihkxvfjdup6cytuabhgr7aistdcje7ubbq6tebrpwmdbg6g67juku",
+      "bafireib46mkhblkqmpogg67fcgqs7223kjo3n4pq6gd55zquad3m3bbfui"
+    ],
+    "AdditionalData": {}
+  },
+  "ParentHash": "bafireiel7coatk47jhcsatc4xdjxx3jx7fdqteplhtlxb7y27bzwnstvwy"
+}

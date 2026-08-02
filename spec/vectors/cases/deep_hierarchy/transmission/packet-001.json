@@ -1,0 +1,20 @@
+{
+  "Leaf": {
+    "Hash": "bafireiel5ss7i32dxtg3ooe55zcgkz4dve76kzh22n7443ad2oc37pbxui",
+    "ItemName": "level1",
+    "Type": "directory",
+    "ContentHash": null,
+    "Content": null,
+    "ClassicMerkleRoot": "iPFCY4ScNUQW4U3j6nPHcM/0alyikEQYAiua/P1VZwk=",
+    "CurrentLinkCount": 2,
+    "LeafCount": 0,
+    "ContentSize": 0,
+    "DagSize": 0,
+    "Links": [
+      "bafireidzxxmxeggukewmp3djcwzfrf4cddug3rrc67ihmauwrkngziqkim",
+      "bafireihjors6emzaxvv7vgzbhi5kmc32odgcwzq26ee6r3wytfd2z42al4"
+    ],
+    "AdditionalData": {}
+  },
+  "ParentHash": "bafireifzuzba5kihvbxfl5ygrse5pca6aamzumemmrjm32yyl5j4cjdj3u"
+}

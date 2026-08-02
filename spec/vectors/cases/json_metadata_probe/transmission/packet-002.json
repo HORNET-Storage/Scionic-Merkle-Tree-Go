@@ -1,0 +1,29 @@
+{
+  "Leaf": {
+    "Hash": "bafireib5agm5sx4u7eeei3g7grlfexodu6a4ekclgcp6av5tho2qmk5f3y",
+    "ItemName": "alpha.txt",
+    "Type": "file",
+    "ContentHash": "tHCw8nzPmDhi+Gj9xktL484JauOnkZHcLeQuMl+dXHI=",
+    "Content": "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1g=",
+    "ClassicMerkleRoot": "",
+    "CurrentLinkCount": 0,
+    "LeafCount": 0,
+    "ContentSize": 0,
+    "DagSize": 0,
+    "Links": [],
+    "AdditionalData": {}
+  },
+  "ParentHash": "bafireida236i245qs6mlr4al4edkgo4p4jwpcpmbafetlqvjuabosam6qu",
+  "proofs": {
+    "bafireib5agm5sx4u7eeei3g7grlfexodu6a4ekclgcp6av5tho2qmk5f3y": {
+      "Leaf": "bafireib5agm5sx4u7eeei3g7grlfexodu6a4ekclgcp6av5tho2qmk5f3y",
+      "Proof": {
+        "Siblings": [
+          "Yw/cL9Zdt/JSvcsBVwVzzp1EClCmop300pRbiAKdcIU=",
+          "brZs0GJrDqyGlfRMFaxLkgblY4ukQXR9uDL35w9sea0="
+        ],
+        "Path": 2
+      }
+    }
+  }
+}

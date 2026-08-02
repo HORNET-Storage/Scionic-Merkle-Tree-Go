@@ -1,0 +1,32 @@
+{
+  "Leaf": {
+    "Hash": "bafireiaaunaedx6fiv7rmuncbmd5y76wzqb4uow4gcgnqif6klyxzxdasa",
+    "ItemName": "beta.bin",
+    "Type": "file",
+    "ContentHash": null,
+    "Content": null,
+    "ClassicMerkleRoot": "jZNuruxu13/wPsMv1SQsnjFUOog+ROHFlrXQE8rWCaA=",
+    "CurrentLinkCount": 2,
+    "LeafCount": 0,
+    "ContentSize": 0,
+    "DagSize": 0,
+    "Links": [
+      "bafireies24kuiuasdujtruusoedrzh4icwms5uuu3m6uxqlrznpwgukd6u",
+      "bafireic3hliumbm23mjzhgfcma7wo4qkualnqdwcjazntor32jdwu5ihe4"
+    ],
+    "AdditionalData": {}
+  },
+  "ParentHash": "bafireida236i245qs6mlr4al4edkgo4p4jwpcpmbafetlqvjuabosam6qu",
+  "proofs": {
+    "bafireiaaunaedx6fiv7rmuncbmd5y76wzqb4uow4gcgnqif6klyxzxdasa": {
+      "Leaf": "bafireiaaunaedx6fiv7rmuncbmd5y76wzqb4uow4gcgnqif6klyxzxdasa",
+      "Proof": {
+        "Siblings": [
+          "wzQE/J7+2kHbwRNuTdrjIlikIdv93yVex2IcTxO1Bgk=",
+          "brZs0GJrDqyGlfRMFaxLkgblY4ukQXR9uDL35w9sea0="
+        ],
+        "Path": 3
+      }
+    }
+  }
+}

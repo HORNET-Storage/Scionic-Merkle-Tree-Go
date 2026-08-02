@@ -1,0 +1,28 @@
+{
+  "Leaf": {
+    "Hash": "bafireidx7qzvy4z3r6wbfoad4oq7r4tyzvkd3vz6ypxzcpoixeredte2ay",
+    "ItemName": "file_at_level_2.txt",
+    "Type": "file",
+    "ContentHash": "nr+jFRORU/wMB7eFFeYHhBb0S/tq+4goQzinsK5jokg=",
+    "Content": "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVI=",
+    "ClassicMerkleRoot": "",
+    "CurrentLinkCount": 0,
+    "LeafCount": 0,
+    "ContentSize": 0,
+    "DagSize": 0,
+    "Links": [],
+    "AdditionalData": {}
+  },
+  "ParentHash": "bafireihjors6emzaxvv7vgzbhi5kmc32odgcwzq26ee6r3wytfd2z42al4",
+  "proofs": {
+    "bafireidx7qzvy4z3r6wbfoad4oq7r4tyzvkd3vz6ypxzcpoixeredte2ay": {
+      "Leaf": "bafireidx7qzvy4z3r6wbfoad4oq7r4tyzvkd3vz6ypxzcpoixeredte2ay",
+      "Proof": {
+        "Siblings": [
+          "lP/qmUztkUj+V4mApn9a1GDa7T1pwoO+Kdtm2i9X0gQ="
+        ],
+        "Path": 0
+      }
+    }
+  }
+}

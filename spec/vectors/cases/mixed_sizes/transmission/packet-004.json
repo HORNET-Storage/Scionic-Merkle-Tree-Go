@@ -1,0 +1,35 @@
+{
+  "Leaf": {
+    "Hash": "bafireiettb7sv57aj3emp5xpkmkqqor7sm6ctcz7lga24jhowxtfkb2nve",
+    "ItemName": "large.txt",
+    "Type": "file",
+    "ContentHash": null,
+    "Content": null,
+    "ClassicMerkleRoot": "/B2FOfcX3tayS491iqylEpwSfFnbZcM7ldZB7Jr6lsk=",
+    "CurrentLinkCount": 4,
+    "LeafCount": 0,
+    "ContentSize": 0,
+    "DagSize": 0,
+    "Links": [
+      "bafireies24kuiuasdujtruusoedrzh4icwms5uuu3m6uxqlrznpwgukd6u",
+      "bafireihkxvfjdup6cytuabhgr7aistdcje7ubbq6tebrpwmdbg6g67juku",
+      "bafireihfiyr42nvc6iqpqi6hm6evdcolzi3pmeorzyczzadrdhwq5fje6a",
+      "bafireiapcpjxy3y4a3rbzbfzz5h3msna4lwlo3wtrd7wz5to6f6szawgfm"
+    ],
+    "AdditionalData": {}
+  },
+  "ParentHash": "bafireibrvfd6b3unpr27mq72pdsksj26y6hq32ahjmy6i7omfresfleloq",
+  "proofs": {
+    "bafireiettb7sv57aj3emp5xpkmkqqor7sm6ctcz7lga24jhowxtfkb2nve": {
+      "Leaf": "bafireiettb7sv57aj3emp5xpkmkqqor7sm6ctcz7lga24jhowxtfkb2nve",
+      "Proof": {
+        "Siblings": [
+          "qxb2NZVx/GrrD3xBp+DUFS2vXwpxwINCp7AfTsNJcMM=",
+          "0t3qhZw+Ce2Lv8x8lzECinY9L1sGFBJ+CFheCESA09U=",
+          "x3tZifVGTvWWMw5X989vNFCRGom+ad9J19k1odHBcW8="
+        ],
+        "Path": 4
+      }
+    }
+  }
+}

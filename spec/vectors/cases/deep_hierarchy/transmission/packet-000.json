@@ -1,0 +1,19 @@
+{
+  "Leaf": {
+    "Hash": "bafireifzuzba5kihvbxfl5ygrse5pca6aamzumemmrjm32yyl5j4cjdj3u",
+    "ItemName": "deep_hierarchy",
+    "Type": "directory",
+    "ContentHash": null,
+    "Content": null,
+    "ClassicMerkleRoot": "YmFmaXJlaWVsNXNzN2kzMmR4dGczb29lNTV6Y2drejRkdmU3Nmt6aDIybjc0NDNhZDJvYzM3cGJ4dWk=",
+    "CurrentLinkCount": 1,
+    "LeafCount": 11,
+    "ContentSize": 3840,
+    "DagSize": 7120,
+    "Links": [
+      "bafireiel5ss7i32dxtg3ooe55zcgkz4dve76kzh22n7443ad2oc37pbxui"
+    ],
+    "AdditionalData": {}
+  },
+  "ParentHash": ""
+}

@@ -1,0 +1,19 @@
+{
+  "Leaf": {
+    "Hash": "bafireiabahlly4rktdhsvhzgd2prjurwuupjo5shdsefkpayhfqefhcvpe",
+    "ItemName": "single_small_file",
+    "Type": "directory",
+    "ContentHash": null,
+    "Content": null,
+    "ClassicMerkleRoot": "YmFmaXJlaWhiaXFpNTJ6cXd6b3RsNWlucHEybG1oZHV2dXJnN3gyam1jZWpodDJrZWRxaWp5b3Jhcmk=",
+    "CurrentLinkCount": 1,
+    "LeafCount": 2,
+    "ContentSize": 1024,
+    "DagSize": 1467,
+    "Links": [
+      "bafireihbiqi52zqwzotl5inpq2lmhduvurg7x2jmcejht2kedqijyorari"
+    ],
+    "AdditionalData": {}
+  },
+  "ParentHash": ""
+}

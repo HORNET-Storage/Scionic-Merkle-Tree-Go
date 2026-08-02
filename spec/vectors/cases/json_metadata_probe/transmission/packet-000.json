@@ -1,0 +1,25 @@
+{
+  "Leaf": {
+    "Hash": "bafireida236i245qs6mlr4al4edkgo4p4jwpcpmbafetlqvjuabosam6qu",
+    "ItemName": "json_metadata_probe",
+    "Type": "directory",
+    "ContentHash": null,
+    "Content": null,
+    "ClassicMerkleRoot": "yN5NtV57QAKoq89uQT5CrweVt9xAn3hZR09IBTkZwGI=",
+    "CurrentLinkCount": 3,
+    "LeafCount": 7,
+    "ContentSize": 5192,
+    "DagSize": 7118,
+    "Links": [
+      "bafireiaaunaedx6fiv7rmuncbmd5y76wzqb4uow4gcgnqif6klyxzxdasa",
+      "bafireib5agm5sx4u7eeei3g7grlfexodu6a4ekclgcp6av5tho2qmk5f3y",
+      "bafireid22tajdviexnfyqgt7qiybwvamusy4esm7mrw5y2tzk4k6ccscli"
+    ],
+    "AdditionalData": {
+      "aaa-probe": "9-byte key",
+      "m": "1-byte key",
+      "zz-probe": "8-byte key"
+    }
+  },
+  "ParentHash": ""
+}

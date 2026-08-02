@@ -1,0 +1,51 @@
+{
+  "Root": "bafireida236i245qs6mlr4al4edkgo4p4jwpcpmbafetlqvjuabosam6qu",
+  "Leafs": {
+    "bafireiaaunaedx6fiv7rmuncbmd5y76wzqb4uow4gcgnqif6klyxzxdasa": {
+      "Hash": "bafireiaaunaedx6fiv7rmuncbmd5y76wzqb4uow4gcgnqif6klyxzxdasa",
+      "ItemName": "beta.bin",
+      "Type": "file",
+      "ContentHash": null,
+      "Content": null,
+      "ClassicMerkleRoot": "jZNuruxu13/wPsMv1SQsnjFUOog+ROHFlrXQE8rWCaA=",
+      "CurrentLinkCount": 2,
+      "LeafCount": 0,
+      "ContentSize": 0,
+      "DagSize": 0,
+      "Links": [],
+      "AdditionalData": {}
+    },
+    "bafireida236i245qs6mlr4al4edkgo4p4jwpcpmbafetlqvjuabosam6qu": {
+      "Hash": "bafireida236i245qs6mlr4al4edkgo4p4jwpcpmbafetlqvjuabosam6qu",
+      "ItemName": "json_metadata_probe",
+      "Type": "directory",
+      "ContentHash": null,
+      "Content": null,
+      "ClassicMerkleRoot": "yN5NtV57QAKoq89uQT5CrweVt9xAn3hZR09IBTkZwGI=",
+      "CurrentLinkCount": 3,
+      "LeafCount": 7,
+      "ContentSize": 5192,
+      "DagSize": 7118,
+      "Links": [
+        "bafireiaaunaedx6fiv7rmuncbmd5y76wzqb4uow4gcgnqif6klyxzxdasa"
+      ],
+      "AdditionalData": {
+        "aaa-probe": "9-byte key",
+        "m": "1-byte key",
+        "zz-probe": "8-byte key"
+      },
+      "stored_proofs": {
+        "bafireiaaunaedx6fiv7rmuncbmd5y76wzqb4uow4gcgnqif6klyxzxdasa": {
+          "Leaf": "bafireiaaunaedx6fiv7rmuncbmd5y76wzqb4uow4gcgnqif6klyxzxdasa",
+          "Proof": {
+            "Siblings": [
+              "wzQE/J7+2kHbwRNuTdrjIlikIdv93yVex2IcTxO1Bgk=",
+              "brZs0GJrDqyGlfRMFaxLkgblY4ukQXR9uDL35w9sea0="
+            ],
+            "Path": 3
+          }
+        }
+      }
+    }
+  }
+}

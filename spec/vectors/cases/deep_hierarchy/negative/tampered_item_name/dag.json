@@ -1,0 +1,175 @@
+{
+  "Root": "bafireifzuzba5kihvbxfl5ygrse5pca6aamzumemmrjm32yyl5j4cjdj3u",
+  "Leafs": {
+    "bafireiadw2zuzmj3chd23m2xfxa6ovjuj4d7k2xugockpeg4moul2futp4": {
+      "Hash": "bafireiadw2zuzmj3chd23m2xfxa6ovjuj4d7k2xugockpeg4moul2futp4",
+      "ItemName": "file_at_level_3.txt-tampered",
+      "Type": "file",
+      "ContentHash": "MBqQZP5pUtMxnyNZMoe2FEwNJ4ytkIXGP8aXeS0IIzg=",
+      "Content": "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1O",
+      "ClassicMerkleRoot": "",
+      "CurrentLinkCount": 0,
+      "LeafCount": 0,
+      "ContentSize": 0,
+      "DagSize": 0,
+      "Links": [],
+      "AdditionalData": {}
+    },
+    "bafireib6xkvqj2c3utubn7gtdpgoonzsd3b2ajpntypjrekbry65bomndi": {
+      "Hash": "bafireib6xkvqj2c3utubn7gtdpgoonzsd3b2ajpntypjrekbry65bomndi",
+      "ItemName": "file_at_level_4.txt",
+      "Type": "file",
+      "ContentHash": "xufTXFCfTj4WSE0ceAjhs4TtWPEKJmCFsxmdvuvT0z4=",
+      "Content": "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSg==",
+      "ClassicMerkleRoot": "",
+      "CurrentLinkCount": 0,
+      "LeafCount": 0,
+      "ContentSize": 0,
+      "DagSize": 0,
+      "Links": [],
+      "AdditionalData": {}
+    },
+    "bafireibfwuzipeprghtf5lt3mrtfrgpprp5pgzpzema46bpu3nqwyu4n6i": {
+      "Hash": "bafireibfwuzipeprghtf5lt3mrtfrgpprp5pgzpzema46bpu3nqwyu4n6i",
+      "ItemName": "level4",
+      "Type": "directory",
+      "ContentHash": null,
+      "Content": null,
+      "ClassicMerkleRoot": "FKHkCs+zyh4ejcR74+h2khFiwwCcmxXNOw2GDD2sjgk=",
+      "CurrentLinkCount": 2,
+      "LeafCount": 0,
+      "ContentSize": 0,
+      "DagSize": 0,
+      "Links": [
+        "bafireib6xkvqj2c3utubn7gtdpgoonzsd3b2ajpntypjrekbry65bomndi",
+        "bafireif7pnrwvuqwxmplp37xg33xxqvbflwpj4jaqoz5wwrolvwxkwcob4"
+      ],
+      "AdditionalData": {}
+    },
+    "bafireiborlrp3pkvbfvp3p57mivergoo5he4gmpv4yworhptmrt7vtxaiu": {
+      "Hash": "bafireiborlrp3pkvbfvp3p57mivergoo5he4gmpv4yworhptmrt7vtxaiu",
+      "ItemName": "file_at_level_5.txt",
+      "Type": "file",
+      "ContentHash": "J3vviJe4hHkw3RMZ07X/NuMW2Ra5L5tUCDW1sP4tkqE=",
+      "Content": "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUY=",
+      "ClassicMerkleRoot": "",
+      "CurrentLinkCount": 0,
+      "LeafCount": 0,
+      "ContentSize": 0,
+      "DagSize": 0,
+      "Links": [],
+      "AdditionalData": {}
+    },
+    "bafireicjnpibc3epkkzncxbv7oi2ukaksrkncgip6uazbekqcmkdjsyk4a": {
+      "Hash": "bafireicjnpibc3epkkzncxbv7oi2ukaksrkncgip6uazbekqcmkdjsyk4a",
+      "ItemName": "level3",
+      "Type": "directory",
+      "ContentHash": null,
+      "Content": null,
+      "ClassicMerkleRoot": "o8j5HBSQgMf1cszrr2Yz4aLir8XB4GNgS850NymlIpM=",
+      "CurrentLinkCount": 2,
+      "LeafCount": 0,
+      "ContentSize": 0,
+      "DagSize": 0,
+      "Links": [
+        "bafireiadw2zuzmj3chd23m2xfxa6ovjuj4d7k2xugockpeg4moul2futp4",
+        "bafireibfwuzipeprghtf5lt3mrtfrgpprp5pgzpzema46bpu3nqwyu4n6i"
+      ],
+      "AdditionalData": {}
+    },
+    "bafireidx7qzvy4z3r6wbfoad4oq7r4tyzvkd3vz6ypxzcpoixeredte2ay": {
+      "Hash": "bafireidx7qzvy4z3r6wbfoad4oq7r4tyzvkd3vz6ypxzcpoixeredte2ay",
+      "ItemName": "file_at_level_2.txt",
+      "Type": "file",
+      "ContentHash": "nr+jFRORU/wMB7eFFeYHhBb0S/tq+4goQzinsK5jokg=",
+      "Content": "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVI=",
+      "ClassicMerkleRoot": "",
+      "CurrentLinkCount": 0,
+      "LeafCount": 0,
+      "ContentSize": 0,
+      "DagSize": 0,
+      "Links": [],
+      "AdditionalData": {}
+    },
+    "bafireidzxxmxeggukewmp3djcwzfrf4cddug3rrc67ihmauwrkngziqkim": {
+      "Hash": "bafireidzxxmxeggukewmp3djcwzfrf4cddug3rrc67ihmauwrkngziqkim",
+      "ItemName": "file_at_level_1.txt",
+      "Type": "file",
+      "ContentHash": "bFB2BhsMwx85h3Z8BizRM6sTBzSguBhMZdBliBgjuZI=",
+      "Content": "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVg==",
+      "ClassicMerkleRoot": "",
+      "CurrentLinkCount": 0,
+      "LeafCount": 0,
+      "ContentSize": 0,
+      "DagSize": 0,
+      "Links": [],
+      "AdditionalData": {}
+    },
+    "bafireiel5ss7i32dxtg3ooe55zcgkz4dve76kzh22n7443ad2oc37pbxui": {
+      "Hash": "bafireiel5ss7i32dxtg3ooe55zcgkz4dve76kzh22n7443ad2oc37pbxui",
+      "ItemName": "level1",
+      "Type": "directory",
+      "ContentHash": null,
+      "Content": null,
+      "ClassicMerkleRoot": "iPFCY4ScNUQW4U3j6nPHcM/0alyikEQYAiua/P1VZwk=",
+      "CurrentLinkCount": 2,
+      "LeafCount": 0,
+      "ContentSize": 0,
+      "DagSize": 0,
+      "Links": [
+        "bafireidzxxmxeggukewmp3djcwzfrf4cddug3rrc67ihmauwrkngziqkim",
+        "bafireihjors6emzaxvv7vgzbhi5kmc32odgcwzq26ee6r3wytfd2z42al4"
+      ],
+      "AdditionalData": {}
+    },
+    "bafireif7pnrwvuqwxmplp37xg33xxqvbflwpj4jaqoz5wwrolvwxkwcob4": {
+      "Hash": "bafireif7pnrwvuqwxmplp37xg33xxqvbflwpj4jaqoz5wwrolvwxkwcob4",
+      "ItemName": "level5",
+      "Type": "directory",
+      "ContentHash": null,
+      "Content": null,
+      "ClassicMerkleRoot": "YmFmaXJlaWJvcmxycDNwa3ZiZnZwM3A1N21pdmVyZ29vNWhlNGdtcHY0eXdvcmhwdG1ydDd2dHhhaXU=",
+      "CurrentLinkCount": 1,
+      "LeafCount": 0,
+      "ContentSize": 0,
+      "DagSize": 0,
+      "Links": [
+        "bafireiborlrp3pkvbfvp3p57mivergoo5he4gmpv4yworhptmrt7vtxaiu"
+      ],
+      "AdditionalData": {}
+    },
+    "bafireifzuzba5kihvbxfl5ygrse5pca6aamzumemmrjm32yyl5j4cjdj3u": {
+      "Hash": "bafireifzuzba5kihvbxfl5ygrse5pca6aamzumemmrjm32yyl5j4cjdj3u",
+      "ItemName": "deep_hierarchy",
+      "Type": "directory",
+      "ContentHash": null,
+      "Content": null,
+      "ClassicMerkleRoot": "YmFmaXJlaWVsNXNzN2kzMmR4dGczb29lNTV6Y2drejRkdmU3Nmt6aDIybjc0NDNhZDJvYzM3cGJ4dWk=",
+      "CurrentLinkCount": 1,
+      "LeafCount": 11,
+      "ContentSize": 3840,
+      "DagSize": 7120,
+      "Links": [
+        "bafireiel5ss7i32dxtg3ooe55zcgkz4dve76kzh22n7443ad2oc37pbxui"
+      ],
+      "AdditionalData": {}
+    },
+    "bafireihjors6emzaxvv7vgzbhi5kmc32odgcwzq26ee6r3wytfd2z42al4": {
+      "Hash": "bafireihjors6emzaxvv7vgzbhi5kmc32odgcwzq26ee6r3wytfd2z42al4",
+      "ItemName": "level2",
+      "Type": "directory",
+      "ContentHash": null,
+      "Content": null,
+      "ClassicMerkleRoot": "SIsnLPbrU2FZEkOUyH4z1Vp/nZ50YkvqUB7AZoyv9GQ=",
+      "CurrentLinkCount": 2,
+      "LeafCount": 0,
+      "ContentSize": 0,
+      "DagSize": 0,
+      "Links": [
+        "bafireicjnpibc3epkkzncxbv7oi2ukaksrkncgip6uazbekqcmkdjsyk4a",
+        "bafireidx7qzvy4z3r6wbfoad4oq7r4tyzvkd3vz6ypxzcpoixeredte2ay"
+      ],
+      "AdditionalData": {}
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "Leaves": [
+    {
+      "Hash": "bafireiabahlly4rktdhsvhzgd2prjurwuupjo5shdsefkpayhfqefhcvpe",
+      "ItemName": "single_small_file",
+      "Type": "directory",
+      "ContentHash": null,
+      "Content": null,
+      "ClassicMerkleRoot": "YmFmaXJlaWhiaXFpNTJ6cXd6b3RsNWlucHEybG1oZHV2dXJnN3gyam1jZWpodDJrZWRxaWp5b3Jhcmk=",
+      "CurrentLinkCount": 1,
+      "LeafCount": 2,
+      "ContentSize": 1024,
+      "DagSize": 1467,
+      "Links": [
+        "bafireihbiqi52zqwzotl5inpq2lmhduvurg7x2jmcejht2kedqijyorari"
+      ],
+      "AdditionalData": {}
+    },
+    {
+      "Hash": "bafireihbiqi52zqwzotl5inpq2lmhduvurg7x2jmcejht2kedqijyorari",
+      "ItemName": "small.txt",
+      "Type": "file",
+      "ContentHash": "xufTXFCfTj4WSE0ceAjhs4TtWPEKJmCFsxmdvuvT0z4=",
+      "Content": "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSg==",
+      "ClassicMerkleRoot": "",
+      "CurrentLinkCount": 0,
+      "LeafCount": 0,
+      "ContentSize": 0,
+      "DagSize": 0,
+      "Links": [],
+      "AdditionalData": {}
+    }
+  ],
+  "Relationships": {
+    "bafireiabahlly4rktdhsvhzgd2prjurwuupjo5shdsefkpayhfqefhcvpe": "",
+    "bafireihbiqi52zqwzotl5inpq2lmhduvurg7x2jmcejht2kedqijyorari": "bafireiabahlly4rktdhsvhzgd2prjurwuupjo5shdsefkpayhfqefhcvpe"
+  },
+  "PacketIndex": 0,
+  "TotalPackets": 1
+}

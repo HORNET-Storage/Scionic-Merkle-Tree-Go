@@ -7,14 +7,20 @@
       "root_kind": "directory",
       "root_input_path": "deep_hierarchy",
       "root_hash": "bafireifzuzba5kihvbxfl5ygrse5pca6aamzumemmrjm32yyl5j4cjdj3u",
+      "additional_data": [],
       "leaf_count": 11,
       "file_leaves": 5,
       "directory_leaves": 6,
       "chunk_leaves": 0,
       "full_dag": "cases/deep_hierarchy/full/dag.cbor",
+      "full_dag_json": "cases/deep_hierarchy/full/dag.json",
       "partial_dags": [
         "cases/deep_hierarchy/partial/0/dag.cbor",
         "cases/deep_hierarchy/partial/1/dag.cbor"
+      ],
+      "partial_dags_json": [
+        "cases/deep_hierarchy/partial/0/dag.json",
+        "cases/deep_hierarchy/partial/1/dag.json"
       ],
       "transmission_packets": [
         "cases/deep_hierarchy/transmission/packet-000.cbor",
@@ -29,22 +35,41 @@
         "cases/deep_hierarchy/transmission/packet-009.cbor",
         "cases/deep_hierarchy/transmission/packet-010.cbor"
       ],
+      "transmission_packets_json": [
+        "cases/deep_hierarchy/transmission/packet-000.json",
+        "cases/deep_hierarchy/transmission/packet-001.json",
+        "cases/deep_hierarchy/transmission/packet-002.json",
+        "cases/deep_hierarchy/transmission/packet-003.json",
+        "cases/deep_hierarchy/transmission/packet-004.json",
+        "cases/deep_hierarchy/transmission/packet-005.json",
+        "cases/deep_hierarchy/transmission/packet-006.json",
+        "cases/deep_hierarchy/transmission/packet-007.json",
+        "cases/deep_hierarchy/transmission/packet-008.json",
+        "cases/deep_hierarchy/transmission/packet-009.json",
+        "cases/deep_hierarchy/transmission/packet-010.json"
+      ],
       "batched_packets": [
         "cases/deep_hierarchy/batched/batch-000.cbor"
+      ],
+      "batched_packets_json": [
+        "cases/deep_hierarchy/batched/batch-000.json"
       ],
       "negative_vectors": [
         {
           "path": "cases/deep_hierarchy/negative/tampered_content/dag.cbor",
+          "path_json": "cases/deep_hierarchy/negative/tampered_content/dag.json",
           "kind": "tampered_content",
           "description": "one leaf's content byte flipped; its CID no longer matches the content"
         },
         {
           "path": "cases/deep_hierarchy/negative/tampered_item_name/dag.cbor",
+          "path_json": "cases/deep_hierarchy/negative/tampered_item_name/dag.json",
           "kind": "tampered_item_name",
           "description": "one leaf's ItemName altered while its content and stored CID are left alone"
         },
         {
           "path": "cases/deep_hierarchy/negative/tampered_link/dag.cbor",
+          "path_json": "cases/deep_hierarchy/negative/tampered_link/dag.json",
           "kind": "tampered_link",
           "description": "one link retargeted at the root CID; every leaf is still present and individually well formed, only the relationship is wrong"
         }
@@ -55,14 +80,20 @@
       "root_kind": "directory",
       "root_input_path": "flat_directory",
       "root_hash": "bafireigd6awocke3nmagbspbkv2rfiqqai455eimle27u36ljeytyqdb4u",
+      "additional_data": [],
       "leaf_count": 6,
       "file_leaves": 5,
       "directory_leaves": 1,
       "chunk_leaves": 0,
       "full_dag": "cases/flat_directory/full/dag.cbor",
+      "full_dag_json": "cases/flat_directory/full/dag.json",
       "partial_dags": [
         "cases/flat_directory/partial/0/dag.cbor",
         "cases/flat_directory/partial/1/dag.cbor"
+      ],
+      "partial_dags_json": [
+        "cases/flat_directory/partial/0/dag.json",
+        "cases/flat_directory/partial/1/dag.json"
       ],
       "transmission_packets": [
         "cases/flat_directory/transmission/packet-000.cbor",
@@ -72,22 +103,114 @@
         "cases/flat_directory/transmission/packet-004.cbor",
         "cases/flat_directory/transmission/packet-005.cbor"
       ],
+      "transmission_packets_json": [
+        "cases/flat_directory/transmission/packet-000.json",
+        "cases/flat_directory/transmission/packet-001.json",
+        "cases/flat_directory/transmission/packet-002.json",
+        "cases/flat_directory/transmission/packet-003.json",
+        "cases/flat_directory/transmission/packet-004.json",
+        "cases/flat_directory/transmission/packet-005.json"
+      ],
       "batched_packets": [
         "cases/flat_directory/batched/batch-000.cbor"
+      ],
+      "batched_packets_json": [
+        "cases/flat_directory/batched/batch-000.json"
       ],
       "negative_vectors": [
         {
           "path": "cases/flat_directory/negative/tampered_content/dag.cbor",
+          "path_json": "cases/flat_directory/negative/tampered_content/dag.json",
           "kind": "tampered_content",
           "description": "one leaf's content byte flipped; its CID no longer matches the content"
         },
         {
           "path": "cases/flat_directory/negative/tampered_item_name/dag.cbor",
+          "path_json": "cases/flat_directory/negative/tampered_item_name/dag.json",
           "kind": "tampered_item_name",
           "description": "one leaf's ItemName altered while its content and stored CID are left alone"
         },
         {
           "path": "cases/flat_directory/negative/tampered_link/dag.cbor",
+          "path_json": "cases/flat_directory/negative/tampered_link/dag.json",
+          "kind": "tampered_link",
+          "description": "one link retargeted at the root CID; every leaf is still present and individually well formed, only the relationship is wrong"
+        }
+      ]
+    },
+    {
+      "name": "json_metadata_probe",
+      "root_kind": "directory",
+      "root_input_path": "json_metadata_probe",
+      "root_hash": "bafireida236i245qs6mlr4al4edkgo4p4jwpcpmbafetlqvjuabosam6qu",
+      "additional_data": [
+        {
+          "key": "aaa-probe",
+          "value": "9-byte key"
+        },
+        {
+          "key": "m",
+          "value": "1-byte key"
+        },
+        {
+          "key": "zz-probe",
+          "value": "8-byte key"
+        }
+      ],
+      "leaf_count": 7,
+      "file_leaves": 3,
+      "directory_leaves": 2,
+      "chunk_leaves": 2,
+      "full_dag": "cases/json_metadata_probe/full/dag.cbor",
+      "full_dag_json": "cases/json_metadata_probe/full/dag.json",
+      "partial_dags": [
+        "cases/json_metadata_probe/partial/0/dag.cbor",
+        "cases/json_metadata_probe/partial/1/dag.cbor"
+      ],
+      "partial_dags_json": [
+        "cases/json_metadata_probe/partial/0/dag.json",
+        "cases/json_metadata_probe/partial/1/dag.json"
+      ],
+      "transmission_packets": [
+        "cases/json_metadata_probe/transmission/packet-000.cbor",
+        "cases/json_metadata_probe/transmission/packet-001.cbor",
+        "cases/json_metadata_probe/transmission/packet-002.cbor",
+        "cases/json_metadata_probe/transmission/packet-003.cbor",
+        "cases/json_metadata_probe/transmission/packet-004.cbor",
+        "cases/json_metadata_probe/transmission/packet-005.cbor",
+        "cases/json_metadata_probe/transmission/packet-006.cbor"
+      ],
+      "transmission_packets_json": [
+        "cases/json_metadata_probe/transmission/packet-000.json",
+        "cases/json_metadata_probe/transmission/packet-001.json",
+        "cases/json_metadata_probe/transmission/packet-002.json",
+        "cases/json_metadata_probe/transmission/packet-003.json",
+        "cases/json_metadata_probe/transmission/packet-004.json",
+        "cases/json_metadata_probe/transmission/packet-005.json",
+        "cases/json_metadata_probe/transmission/packet-006.json"
+      ],
+      "batched_packets": [
+        "cases/json_metadata_probe/batched/batch-000.cbor"
+      ],
+      "batched_packets_json": [
+        "cases/json_metadata_probe/batched/batch-000.json"
+      ],
+      "negative_vectors": [
+        {
+          "path": "cases/json_metadata_probe/negative/tampered_content/dag.cbor",
+          "path_json": "cases/json_metadata_probe/negative/tampered_content/dag.json",
+          "kind": "tampered_content",
+          "description": "one leaf's content byte flipped; its CID no longer matches the content"
+        },
+        {
+          "path": "cases/json_metadata_probe/negative/tampered_item_name/dag.cbor",
+          "path_json": "cases/json_metadata_probe/negative/tampered_item_name/dag.json",
+          "kind": "tampered_item_name",
+          "description": "one leaf's ItemName altered while its content and stored CID are left alone"
+        },
+        {
+          "path": "cases/json_metadata_probe/negative/tampered_link/dag.cbor",
+          "path_json": "cases/json_metadata_probe/negative/tampered_link/dag.json",
           "kind": "tampered_link",
           "description": "one link retargeted at the root CID; every leaf is still present and individually well formed, only the relationship is wrong"
         }
@@ -98,14 +221,20 @@
       "root_kind": "directory",
       "root_input_path": "mixed_sizes",
       "root_hash": "bafireibrvfd6b3unpr27mq72pdsksj26y6hq32ahjmy6i7omfresfleloq",
+      "additional_data": [],
       "leaf_count": 11,
       "file_leaves": 5,
       "directory_leaves": 1,
       "chunk_leaves": 5,
       "full_dag": "cases/mixed_sizes/full/dag.cbor",
+      "full_dag_json": "cases/mixed_sizes/full/dag.json",
       "partial_dags": [
         "cases/mixed_sizes/partial/0/dag.cbor",
         "cases/mixed_sizes/partial/1/dag.cbor"
+      ],
+      "partial_dags_json": [
+        "cases/mixed_sizes/partial/0/dag.json",
+        "cases/mixed_sizes/partial/1/dag.json"
       ],
       "transmission_packets": [
         "cases/mixed_sizes/transmission/packet-000.cbor",
@@ -120,25 +249,47 @@
         "cases/mixed_sizes/transmission/packet-009.cbor",
         "cases/mixed_sizes/transmission/packet-010.cbor"
       ],
+      "transmission_packets_json": [
+        "cases/mixed_sizes/transmission/packet-000.json",
+        "cases/mixed_sizes/transmission/packet-001.json",
+        "cases/mixed_sizes/transmission/packet-002.json",
+        "cases/mixed_sizes/transmission/packet-003.json",
+        "cases/mixed_sizes/transmission/packet-004.json",
+        "cases/mixed_sizes/transmission/packet-005.json",
+        "cases/mixed_sizes/transmission/packet-006.json",
+        "cases/mixed_sizes/transmission/packet-007.json",
+        "cases/mixed_sizes/transmission/packet-008.json",
+        "cases/mixed_sizes/transmission/packet-009.json",
+        "cases/mixed_sizes/transmission/packet-010.json"
+      ],
       "batched_packets": [
         "cases/mixed_sizes/batched/batch-000.cbor",
         "cases/mixed_sizes/batched/batch-001.cbor",
         "cases/mixed_sizes/batched/batch-002.cbor",
         "cases/mixed_sizes/batched/batch-003.cbor"
       ],
+      "batched_packets_json": [
+        "cases/mixed_sizes/batched/batch-000.json",
+        "cases/mixed_sizes/batched/batch-001.json",
+        "cases/mixed_sizes/batched/batch-002.json",
+        "cases/mixed_sizes/batched/batch-003.json"
+      ],
       "negative_vectors": [
         {
           "path": "cases/mixed_sizes/negative/tampered_content/dag.cbor",
+          "path_json": "cases/mixed_sizes/negative/tampered_content/dag.json",
           "kind": "tampered_content",
           "description": "one leaf's content byte flipped; its CID no longer matches the content"
         },
         {
           "path": "cases/mixed_sizes/negative/tampered_item_name/dag.cbor",
+          "path_json": "cases/mixed_sizes/negative/tampered_item_name/dag.json",
           "kind": "tampered_item_name",
           "description": "one leaf's ItemName altered while its content and stored CID are left alone"
         },
         {
           "path": "cases/mixed_sizes/negative/tampered_link/dag.cbor",
+          "path_json": "cases/mixed_sizes/negative/tampered_link/dag.json",
           "kind": "tampered_link",
           "description": "one link retargeted at the root CID; every leaf is still present and individually well formed, only the relationship is wrong"
         }
@@ -149,14 +300,20 @@
       "root_kind": "directory",
       "root_input_path": "nested_directory",
       "root_hash": "bafireiekzu7qss4gcgk3ochl3ehk3ee3rmsqjdh7bin4twzdhkgsfw2kme",
+      "additional_data": [],
       "leaf_count": 7,
       "file_leaves": 4,
       "directory_leaves": 3,
       "chunk_leaves": 0,
       "full_dag": "cases/nested_directory/full/dag.cbor",
+      "full_dag_json": "cases/nested_directory/full/dag.json",
       "partial_dags": [
         "cases/nested_directory/partial/0/dag.cbor",
         "cases/nested_directory/partial/1/dag.cbor"
+      ],
+      "partial_dags_json": [
+        "cases/nested_directory/partial/0/dag.json",
+        "cases/nested_directory/partial/1/dag.json"
       ],
       "transmission_packets": [
         "cases/nested_directory/transmission/packet-000.cbor",
@@ -167,22 +324,37 @@
         "cases/nested_directory/transmission/packet-005.cbor",
         "cases/nested_directory/transmission/packet-006.cbor"
       ],
+      "transmission_packets_json": [
+        "cases/nested_directory/transmission/packet-000.json",
+        "cases/nested_directory/transmission/packet-001.json",
+        "cases/nested_directory/transmission/packet-002.json",
+        "cases/nested_directory/transmission/packet-003.json",
+        "cases/nested_directory/transmission/packet-004.json",
+        "cases/nested_directory/transmission/packet-005.json",
+        "cases/nested_directory/transmission/packet-006.json"
+      ],
       "batched_packets": [
         "cases/nested_directory/batched/batch-000.cbor"
+      ],
+      "batched_packets_json": [
+        "cases/nested_directory/batched/batch-000.json"
       ],
       "negative_vectors": [
         {
           "path": "cases/nested_directory/negative/tampered_content/dag.cbor",
+          "path_json": "cases/nested_directory/negative/tampered_content/dag.json",
           "kind": "tampered_content",
           "description": "one leaf's content byte flipped; its CID no longer matches the content"
         },
         {
           "path": "cases/nested_directory/negative/tampered_item_name/dag.cbor",
+          "path_json": "cases/nested_directory/negative/tampered_item_name/dag.json",
           "kind": "tampered_item_name",
           "description": "one leaf's ItemName altered while its content and stored CID are left alone"
         },
         {
           "path": "cases/nested_directory/negative/tampered_link/dag.cbor",
+          "path_json": "cases/nested_directory/negative/tampered_link/dag.json",
           "kind": "tampered_link",
           "description": "one link retargeted at the root CID; every leaf is still present and individually well formed, only the relationship is wrong"
         }
@@ -193,13 +365,18 @@
       "root_kind": "directory",
       "root_input_path": "single_large_file",
       "root_hash": "bafireiel7coatk47jhcsatc4xdjxx3jx7fdqteplhtlxb7y27bzwnstvwy",
+      "additional_data": [],
       "leaf_count": 5,
       "file_leaves": 1,
       "directory_leaves": 1,
       "chunk_leaves": 3,
       "full_dag": "cases/single_large_file/full/dag.cbor",
+      "full_dag_json": "cases/single_large_file/full/dag.json",
       "partial_dags": [
         "cases/single_large_file/partial/0/dag.cbor"
+      ],
+      "partial_dags_json": [
+        "cases/single_large_file/partial/0/dag.json"
       ],
       "transmission_packets": [
         "cases/single_large_file/transmission/packet-000.cbor",
@@ -208,23 +385,37 @@
         "cases/single_large_file/transmission/packet-003.cbor",
         "cases/single_large_file/transmission/packet-004.cbor"
       ],
+      "transmission_packets_json": [
+        "cases/single_large_file/transmission/packet-000.json",
+        "cases/single_large_file/transmission/packet-001.json",
+        "cases/single_large_file/transmission/packet-002.json",
+        "cases/single_large_file/transmission/packet-003.json",
+        "cases/single_large_file/transmission/packet-004.json"
+      ],
       "batched_packets": [
         "cases/single_large_file/batched/batch-000.cbor",
         "cases/single_large_file/batched/batch-001.cbor"
       ],
+      "batched_packets_json": [
+        "cases/single_large_file/batched/batch-000.json",
+        "cases/single_large_file/batched/batch-001.json"
+      ],
       "negative_vectors": [
         {
           "path": "cases/single_large_file/negative/tampered_content/dag.cbor",
+          "path_json": "cases/single_large_file/negative/tampered_content/dag.json",
           "kind": "tampered_content",
           "description": "one leaf's content byte flipped; its CID no longer matches the content"
         },
         {
           "path": "cases/single_large_file/negative/tampered_item_name/dag.cbor",
+          "path_json": "cases/single_large_file/negative/tampered_item_name/dag.json",
           "kind": "tampered_item_name",
           "description": "one leaf's ItemName altered while its content and stored CID are left alone"
         },
         {
           "path": "cases/single_large_file/negative/tampered_link/dag.cbor",
+          "path_json": "cases/single_large_file/negative/tampered_link/dag.json",
           "kind": "tampered_link",
           "description": "one link retargeted at the root CID; every leaf is still present and individually well formed, only the relationship is wrong"
         }
@@ -235,34 +426,49 @@
       "root_kind": "directory",
       "root_input_path": "single_small_file",
       "root_hash": "bafireiabahlly4rktdhsvhzgd2prjurwuupjo5shdsefkpayhfqefhcvpe",
+      "additional_data": [],
       "leaf_count": 2,
       "file_leaves": 1,
       "directory_leaves": 1,
       "chunk_leaves": 0,
       "full_dag": "cases/single_small_file/full/dag.cbor",
+      "full_dag_json": "cases/single_small_file/full/dag.json",
       "partial_dags": [
         "cases/single_small_file/partial/0/dag.cbor"
+      ],
+      "partial_dags_json": [
+        "cases/single_small_file/partial/0/dag.json"
       ],
       "transmission_packets": [
         "cases/single_small_file/transmission/packet-000.cbor",
         "cases/single_small_file/transmission/packet-001.cbor"
       ],
+      "transmission_packets_json": [
+        "cases/single_small_file/transmission/packet-000.json",
+        "cases/single_small_file/transmission/packet-001.json"
+      ],
       "batched_packets": [
         "cases/single_small_file/batched/batch-000.cbor"
+      ],
+      "batched_packets_json": [
+        "cases/single_small_file/batched/batch-000.json"
       ],
       "negative_vectors": [
         {
           "path": "cases/single_small_file/negative/tampered_content/dag.cbor",
+          "path_json": "cases/single_small_file/negative/tampered_content/dag.json",
           "kind": "tampered_content",
           "description": "one leaf's content byte flipped; its CID no longer matches the content"
         },
         {
           "path": "cases/single_small_file/negative/tampered_item_name/dag.cbor",
+          "path_json": "cases/single_small_file/negative/tampered_item_name/dag.json",
           "kind": "tampered_item_name",
           "description": "one leaf's ItemName altered while its content and stored CID are left alone"
         },
         {
           "path": "cases/single_small_file/negative/tampered_link/dag.cbor",
+          "path_json": "cases/single_small_file/negative/tampered_link/dag.json",
           "kind": "tampered_link",
           "description": "one link retargeted at the root CID; every leaf is still present and individually well formed, only the relationship is wrong"
         }

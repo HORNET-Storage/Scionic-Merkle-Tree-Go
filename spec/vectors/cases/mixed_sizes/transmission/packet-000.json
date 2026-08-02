@@ -1,0 +1,23 @@
+{
+  "Leaf": {
+    "Hash": "bafireibrvfd6b3unpr27mq72pdsksj26y6hq32ahjmy6i7omfresfleloq",
+    "ItemName": "mixed_sizes",
+    "Type": "directory",
+    "ContentHash": null,
+    "Content": null,
+    "ClassicMerkleRoot": "pkqMfDQQG+4ONopdlzgYpsY9eLKzvfworNJ8Z5XfLCc=",
+    "CurrentLinkCount": 5,
+    "LeafCount": 11,
+    "ContentSize": 22656,
+    "DagSize": 25612,
+    "Links": [
+      "bafireibeelbdrhsanbklxlizamtbzlrtk5zd5545axr3gazxekpnkf6oie",
+      "bafireiccls7j6zti5rnrnc22sbbxu3yvlzglhb4fzzjfsce65spnisia5a",
+      "bafireichm6b4fr446oesn7f3h4x4bdinug4ni5ybn35jyekguwxyorzjgu",
+      "bafireiettb7sv57aj3emp5xpkmkqqor7sm6ctcz7lga24jhowxtfkb2nve",
+      "bafireiexvnsqxpzcwdtsfcjz32aybnghg6yaiglf2znfdvvo7fyazvbala"
+    ],
+    "AdditionalData": {}
+  },
+  "ParentHash": ""
+}

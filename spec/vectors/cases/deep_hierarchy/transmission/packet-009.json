@@ -1,0 +1,30 @@
+{
+  "Leaf": {
+    "Hash": "bafireif7pnrwvuqwxmplp37xg33xxqvbflwpj4jaqoz5wwrolvwxkwcob4",
+    "ItemName": "level5",
+    "Type": "directory",
+    "ContentHash": null,
+    "Content": null,
+    "ClassicMerkleRoot": "YmFmaXJlaWJvcmxycDNwa3ZiZnZwM3A1N21pdmVyZ29vNWhlNGdtcHY0eXdvcmhwdG1ydDd2dHhhaXU=",
+    "CurrentLinkCount": 1,
+    "LeafCount": 0,
+    "ContentSize": 0,
+    "DagSize": 0,
+    "Links": [
+      "bafireiborlrp3pkvbfvp3p57mivergoo5he4gmpv4yworhptmrt7vtxaiu"
+    ],
+    "AdditionalData": {}
+  },
+  "ParentHash": "bafireibfwuzipeprghtf5lt3mrtfrgpprp5pgzpzema46bpu3nqwyu4n6i",
+  "proofs": {
+    "bafireif7pnrwvuqwxmplp37xg33xxqvbflwpj4jaqoz5wwrolvwxkwcob4": {
+      "Leaf": "bafireif7pnrwvuqwxmplp37xg33xxqvbflwpj4jaqoz5wwrolvwxkwcob4",
+      "Proof": {
+        "Siblings": [
+          "GnHEJePmEPXcXZdmJKnyNc+7urpurajekS0DjCQSJpM="
+        ],
+        "Path": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "Leaf": {
+    "Hash": "bafireiccls7j6zti5rnrnc22sbbxu3yvlzglhb4fzzjfsce65spnisia5a",
+    "ItemName": "tiny.txt",
+    "Type": "file",
+    "ContentHash": "tHCw8nzPmDhi+Gj9xktL484JauOnkZHcLeQuMl+dXHI=",
+    "Content": "QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWkFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpBQkNERUZHSElKS0xNTk9QUVJTVFVWV1g=",
+    "ClassicMerkleRoot": "",
+    "CurrentLinkCount": 0,
+    "LeafCount": 0,
+    "ContentSize": 0,
+    "DagSize": 0,
+    "Links": [],
+    "AdditionalData": {}
+  },
+  "ParentHash": "bafireibrvfd6b3unpr27mq72pdsksj26y6hq32ahjmy6i7omfresfleloq",
+  "proofs": {
+    "bafireiccls7j6zti5rnrnc22sbbxu3yvlzglhb4fzzjfsce65spnisia5a": {
+      "Leaf": "bafireiccls7j6zti5rnrnc22sbbxu3yvlzglhb4fzzjfsce65spnisia5a",
+      "Proof": {
+        "Siblings": [
+          "VRHK8pMq34FdBoOT8kyXF78BFVWJGyK9Xaw8xt90vpY=",
+          "yq0k7M4gIRGPGU7YUSqGrfSHCFqIqAPIGzsjD54mtkQ=",
+          "x3tZifVGTvWWMw5X989vNFCRGom+ad9J19k1odHBcW8="
+        ],
+        "Path": 6
+      }
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "Leaf": {
+    "Hash": "bafireihtwh3zjvkcwn5kzwv73j42yjhh7emnqx6vyl5icrdojwt6xfqhb4",
+    "ItemName": "subdir2",
+    "Type": "directory",
+    "ContentHash": null,
+    "Content": null,
+    "ClassicMerkleRoot": "qVgBrX7y+USHf9SdgMfyTmSusGXTLz1WXZnCIxqQXmo=",
+    "CurrentLinkCount": 2,
+    "LeafCount": 0,
+    "ContentSize": 0,
+    "DagSize": 0,
+    "Links": [
+      "bafireidrpftpmbxbk3dzrq2k6vjk5gxqv2gmkz436moavckgb27h7epgeu",
+      "bafireigk22lstqiitz3afw3jhsqwi3etuijapzcpcqtsgfmtjwg4lr6mmq"
+    ],
+    "AdditionalData": {}
+  },
+  "ParentHash": "bafireiekzu7qss4gcgk3ochl3ehk3ee3rmsqjdh7bin4twzdhkgsfw2kme",
+  "proofs": {
+    "bafireihtwh3zjvkcwn5kzwv73j42yjhh7emnqx6vyl5icrdojwt6xfqhb4": {
+      "Leaf": "bafireihtwh3zjvkcwn5kzwv73j42yjhh7emnqx6vyl5icrdojwt6xfqhb4",
+      "Proof": {
+        "Siblings": [
+          "186Rsj49k1drs35oXm3/b2d7Zp217NAM4VIJy9QNBkI="
+        ],
+        "Path": 0
+      }
+    }
+  }
+}
