@@ -244,7 +244,7 @@ One asymmetry worth knowing when building leaves by hand: `BuildLeaf` sorts link
 The hash of the leaf's parent, added to make upward traversal possible. This is purely for speed and the parent it points to should still be verified, as we can't include the parent hash inside of the leaf hash.
 This is because the parent hash doesn't exist yet, the leaf hashes are created from bottom to top, despite dag creation starting at the top.
 
-Note that a content-identical chunk can be linked by **several** parents, so "the" parent is a choice. It is resolved deterministically to the **lowest parent hash** (`buildParentIndex`); resolving it by Go's randomized map order made proofs and reconstructed parent hashes differ from run to run.
+Note that a content-identical chunk can be linked by **several** parents, so "the" parent is a choice. It is resolved deterministically to the **lowest parent hash** (`buildParentIndex`); resolving it by Go's randomized map order would make proofs and reconstructed parent hashes differ from run to run.
 
 ### AdditionalData: map[string]string
 This map is included in the leaf hash allowing for developers to add additional data to the dag leaves if and when needed.
