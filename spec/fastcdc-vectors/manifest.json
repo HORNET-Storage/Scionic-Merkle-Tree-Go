@@ -1,0 +1,303 @@
+{
+  "spec": "fastcdc-v1",
+  "cases": [
+    {
+      "name": "below_min_256kib",
+      "kind": "corpus",
+      "seed": "scionic-fastcdc-v1:corpus:below_min_256kib",
+      "length": 262144,
+      "boundaries": [
+        262144
+      ],
+      "chunk_sha256": [
+        "a8ca98d333676bfbf4e60c7c07605961afc650a3529c4f704219689b1f1d6fd7"
+      ],
+      "root_hash": "bafireigdq7qpxs3qmt5uldfmrqtdyzitu2ivwphvrrn4f5ipmvabjttx7i",
+      "leaf_count": 1,
+      "chunk_leaves": 0
+    },
+    {
+      "name": "exactly_min_512kib",
+      "kind": "corpus",
+      "seed": "scionic-fastcdc-v1:corpus:exactly_min_512kib",
+      "length": 524288,
+      "boundaries": [
+        524288
+      ],
+      "chunk_sha256": [
+        "1667d8c564d7583673ee274bfe8d254d1e790bffd4e506bbdefbe7e4ddb27ebd"
+      ],
+      "root_hash": "bafireiddqqo5p2xhpovlw5gm5dof7oukxldqojlxgurn22qy46bipfhgsi",
+      "leaf_count": 1,
+      "chunk_leaves": 0
+    },
+    {
+      "name": "min_plus_one",
+      "kind": "corpus",
+      "seed": "scionic-fastcdc-v1:corpus:min_plus_one",
+      "length": 524289,
+      "boundaries": [
+        524289
+      ],
+      "chunk_sha256": [
+        "0e0c2f6bdcf661ea2d694f72399b1658eaa3cf1179b7f15ea9be249f2e8a48eb"
+      ],
+      "root_hash": "bafireigdf7krunznsldglqi7gbv7g7u2zueaawjejx27tyh77z7opnmyfe",
+      "leaf_count": 1,
+      "chunk_leaves": 0
+    },
+    {
+      "name": "random_3mib",
+      "kind": "corpus",
+      "seed": "scionic-fastcdc-v1:corpus:random_3mib",
+      "length": 3145728,
+      "boundaries": [
+        2118489,
+        3145728
+      ],
+      "chunk_sha256": [
+        "22e348ffa477d20cf9528fc6bc919b231f79f5364def98cb6025b45e9010ae64",
+        "bb5aeb22bef315158581e4deff7b541d0cc4e2b7b062d287a1ae30a84d854689"
+      ],
+      "root_hash": "bafireih77xcl6pd575sytn34eshvkxmflpdskhz6xfqetcttuser3vp7pe",
+      "leaf_count": 3,
+      "chunk_leaves": 2
+    },
+    {
+      "name": "random_16mib",
+      "kind": "corpus",
+      "seed": "scionic-fastcdc-v1:corpus:random_16mib",
+      "length": 16777216,
+      "boundaries": [
+        2117699,
+        6050180,
+        8171650,
+        11216719,
+        13389598,
+        16777216
+      ],
+      "chunk_sha256": [
+        "71736e20ae08b7a0b078bb6dc02010c51241cf835a322527d1300eabe81091d7",
+        "7bef02744e0513385334ff03276af825a9325b2aff0fe1408f847baaadb38108",
+        "a5071847481ffe9eb5652b8c16e8c185390d9632c95085b726ec90a94cb48cbb",
+        "40a34aa813b4308e11434f7a73d940eeb8746c59f48fcd1ff4cac7f1d4d96211",
+        "f09345d6651de295a63df57fcfd36f3bbc6356807fe3e68b7c7aa9651b90fc99",
+        "b01ab9d76c0fca0add26bafa164dadb107fbb25a6b7e877d2a12cf05fa28489f"
+      ],
+      "root_hash": "bafireigbimiattbdsii5j4htfq2nrmvfzagso7ahfyw2hql4wpma65r3au",
+      "leaf_count": 7,
+      "chunk_leaves": 6
+    },
+    {
+      "name": "random_40mib",
+      "kind": "corpus",
+      "seed": "scionic-fastcdc-v1:corpus:random_40mib",
+      "length": 41943040,
+      "boundaries": [
+        2326792,
+        4448261,
+        7803880,
+        10368541,
+        12534374,
+        14857025,
+        15958121,
+        18199537,
+        21496645,
+        23777530,
+        27398725,
+        30215840,
+        32650949,
+        35195123,
+        37502473,
+        39604446,
+        41943040
+      ],
+      "chunk_sha256": [
+        "ccd293ebb599fe4e6b24421901b6f84de073fbf3fe31feab52241814702eab5e",
+        "922119c7e7deb468d77d16b5f078c2d78b0bcac85708b92e8ce7fb032964d74a",
+        "fb19c834c79dea9392c52cb0d7c0cf86378f5970c2db2c1236944e4fda5c0765",
+        "766d974522aa0a359b93c67252d9f4063c4d275b032b39620caa731b1c006194",
+        "7f12bc6c1a304833d8bafa157e47477ca44d4ce2e3e1d39110cdac8a7e004c4c",
+        "3fedf537007d6f551dc9dcdb716f9179b471d18a9cab9c71af6cb3f14639f1b9",
+        "463c95ccdfa53fa57f10a8eb31cf8d401ebdacd14afc984e8736eb9b4fd0e6fa",
+        "3738fc2ad9693da573a50e1d08e5ef6937a539cb9a03621bcf25a4077d4f7fe9",
+        "2d7149a5d4f95613d03cde43e8b9325d1eb5a485a542c31dadcb2f4b98924f08",
+        "c1972d3773ebb29b42abe0df45bd970ec203d553e1ce6e190bcb57e694626b89",
+        "976755e6af7f7632b25495680b410d1ec8e1702cecf76ab693299b40921f35c3",
+        "9f580647f0845df58927871e644ebad390a6ee455975bcd083d6d1a738d99d9a",
+        "95fe2afb45eb337ce6906a6377d7cbe43e766b010088ce1f47748e3b1fce0f37",
+        "56da79304961b34d9eecf7cd3b2eec6b91b343ae0326c84467d912412b25f159",
+        "00bfb9b615704953dc3079e1c6d0c8c5f930e77339e8d39b6b1f2a9caafc4a91",
+        "d209175f900f2b320ae3f8f8686fc97e1d5e39f9c3c2961b665f63d9809679a4",
+        "9af02fe027977dd4f23349f4afd0b690f4a0d6417c4b0c6cfb743540b9f7196f"
+      ],
+      "root_hash": "bafireihutawkamobtq5qyfh2v7ywuhswgkqdn432gwsknn3oauk4gsye2i",
+      "leaf_count": 18,
+      "chunk_leaves": 17
+    },
+    {
+      "name": "zeros_20mib",
+      "kind": "zeros",
+      "length": 20971520,
+      "boundaries": [
+        8388608,
+        16777216,
+        20971520
+      ],
+      "chunk_sha256": [
+        "2daeb1f36095b44b318410b3f4e8b5d989dcc7bb023d1426c492dab0a3053e74",
+        "2daeb1f36095b44b318410b3f4e8b5d989dcc7bb023d1426c492dab0a3053e74",
+        "bb9f8df61474d25e71fa00722318cd387396ca1736605e1248821cc0de3d3af8"
+      ],
+      "root_hash": "bafireihn5zsshbvvy253h5tuwpur6mtuysmwr4sutxbt3aq2xpdihavwau",
+      "leaf_count": 4,
+      "chunk_leaves": 3
+    },
+    {
+      "name": "edit_insert_4kib_mid",
+      "kind": "edit",
+      "length": 16781312,
+      "base": "random_16mib",
+      "op": "insert",
+      "offset": 8388608,
+      "edit_length": 4096,
+      "payload_seed": "scionic-fastcdc-v1:corpus:edit_insert_4kib_mid",
+      "boundaries": [
+        2117699,
+        6050180,
+        8171650,
+        11220815,
+        13393694,
+        16781312
+      ],
+      "chunk_sha256": [
+        "71736e20ae08b7a0b078bb6dc02010c51241cf835a322527d1300eabe81091d7",
+        "7bef02744e0513385334ff03276af825a9325b2aff0fe1408f847baaadb38108",
+        "a5071847481ffe9eb5652b8c16e8c185390d9632c95085b726ec90a94cb48cbb",
+        "2e2aa47fd0d85bc5ce3b5d2e6f9d7ceba6639fdd54591ad94003d0d5e9592fef",
+        "f09345d6651de295a63df57fcfd36f3bbc6356807fe3e68b7c7aa9651b90fc99",
+        "b01ab9d76c0fca0add26bafa164dadb107fbb25a6b7e877d2a12cf05fa28489f"
+      ],
+      "reused": [
+        true,
+        true,
+        true,
+        false,
+        true,
+        true
+      ],
+      "root_hash": "bafireianjziaup4qyf3lrwm5zzuxvogmlep7wyfh3sj4fwsswylx7mdf6i",
+      "leaf_count": 7,
+      "chunk_leaves": 6
+    },
+    {
+      "name": "edit_delete_64kib_mid",
+      "kind": "edit",
+      "length": 16711680,
+      "base": "random_16mib",
+      "op": "delete",
+      "offset": 6291456,
+      "edit_length": 65536,
+      "boundaries": [
+        2117699,
+        6050180,
+        9074016,
+        12707715,
+        13324062,
+        16711680
+      ],
+      "chunk_sha256": [
+        "71736e20ae08b7a0b078bb6dc02010c51241cf835a322527d1300eabe81091d7",
+        "7bef02744e0513385334ff03276af825a9325b2aff0fe1408f847baaadb38108",
+        "ccca1a73386950979b2fa08c655ff151ffb480f2902b0f0aeb84a6d9cce63388",
+        "09296d2bf7dc973abb7694faec81b97ce5c54c719d0dc6bbaad1491da90508a8",
+        "0d557b340cfede445c6b0c44a8f4eafd34ece0f3866979d1336be0349db39c21",
+        "b01ab9d76c0fca0add26bafa164dadb107fbb25a6b7e877d2a12cf05fa28489f"
+      ],
+      "reused": [
+        true,
+        true,
+        false,
+        false,
+        false,
+        true
+      ],
+      "root_hash": "bafireieedsfqr54ma5s5oogromlf7lhep6b3fffauvcg4g3hzqokebjhke",
+      "leaf_count": 7,
+      "chunk_leaves": 6
+    },
+    {
+      "name": "edit_prepend_4kib",
+      "kind": "edit",
+      "length": 16781312,
+      "base": "random_16mib",
+      "op": "insert",
+      "edit_length": 4096,
+      "payload_seed": "scionic-fastcdc-v1:corpus:edit_prepend_4kib",
+      "boundaries": [
+        2121795,
+        6054276,
+        8175746,
+        11220815,
+        13393694,
+        16781312
+      ],
+      "chunk_sha256": [
+        "2208e70d3080ffba40fec249bb3eed05feeb5b2bada3a5d3a607a9815ffacc04",
+        "7bef02744e0513385334ff03276af825a9325b2aff0fe1408f847baaadb38108",
+        "a5071847481ffe9eb5652b8c16e8c185390d9632c95085b726ec90a94cb48cbb",
+        "40a34aa813b4308e11434f7a73d940eeb8746c59f48fcd1ff4cac7f1d4d96211",
+        "f09345d6651de295a63df57fcfd36f3bbc6356807fe3e68b7c7aa9651b90fc99",
+        "b01ab9d76c0fca0add26bafa164dadb107fbb25a6b7e877d2a12cf05fa28489f"
+      ],
+      "reused": [
+        false,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "root_hash": "bafireiaownkvoh72zsf5rly7hzq727n54kzmaijyx3s623a6o6xlpqj6jq",
+      "leaf_count": 7,
+      "chunk_leaves": 6
+    },
+    {
+      "name": "edit_append_4kib",
+      "kind": "edit",
+      "length": 16781312,
+      "base": "random_16mib",
+      "op": "insert",
+      "offset": 16777216,
+      "edit_length": 4096,
+      "payload_seed": "scionic-fastcdc-v1:corpus:edit_append_4kib",
+      "boundaries": [
+        2117699,
+        6050180,
+        8171650,
+        11216719,
+        13389598,
+        16781312
+      ],
+      "chunk_sha256": [
+        "71736e20ae08b7a0b078bb6dc02010c51241cf835a322527d1300eabe81091d7",
+        "7bef02744e0513385334ff03276af825a9325b2aff0fe1408f847baaadb38108",
+        "a5071847481ffe9eb5652b8c16e8c185390d9632c95085b726ec90a94cb48cbb",
+        "40a34aa813b4308e11434f7a73d940eeb8746c59f48fcd1ff4cac7f1d4d96211",
+        "f09345d6651de295a63df57fcfd36f3bbc6356807fe3e68b7c7aa9651b90fc99",
+        "88010414c0155452fd2f6892ae1cf7606db6933f0beae5a06fd7f8f55e483d39"
+      ],
+      "reused": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        false
+      ],
+      "root_hash": "bafireibdqkj6fdb2vkiyh3uu7mumql5lnzhs2mnm5cqguqikcujt2lf5ha",
+      "leaf_count": 7,
+      "chunk_leaves": 6
+    }
+  ]
+}

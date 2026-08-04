@@ -7,6 +7,9 @@ import (
 	"github.com/HORNET-Storage/Scionic-Merkle-Tree/v2/merkletree"
 )
 
+// DefaultChunkSize is the LEGACY fixed-mode chunk size, kept as the fastcdc-v1
+// target's companion. New trees chunk with fastcdc-v1 by default; see
+// fastcdc.go and docs/fastcdc-v1.md.
 const DefaultChunkSize = 2048 * 1024 // 2MB
 
 var ChunkSize = DefaultChunkSize
@@ -109,16 +112,27 @@ func SetDefaultBatchSize() {
 	SetBatchSize(DefaultBatchSize)
 }
 
+// SetChunkSize switches producers to LEGACY fixed-size chunking with the given
+// chunk size (size <= 0 processes whole files as single chunks). New trees cut
+// with fastcdc-v1 by default; fixed mode exists for the committed spec-vector
+// corpus, tests, and backwards-compatible tooling. Legacy fixed roots carry no
+// chunking tag (absent ⇒ fixed-2m).
 func SetChunkSize(size int) {
+	chunkingFastCDC = false
 	ChunkSize = size
 }
 
+// DisableChunking switches to legacy mode with chunking off entirely: files
+// are processed as single chunks regardless of size.
 func DisableChunking() {
 	SetChunkSize(-1)
 }
 
+// SetDefaultChunkSize restores the library default: fastcdc-v1 content-defined
+// chunking, with ChunkSize reset to DefaultChunkSize for the legacy paths.
 func SetDefaultChunkSize() {
-	SetChunkSize(DefaultChunkSize)
+	chunkingFastCDC = true
+	ChunkSize = DefaultChunkSize
 }
 
 // DagBuilderConfig controls DAG building behavior

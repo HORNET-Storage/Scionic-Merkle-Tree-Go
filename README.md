@@ -28,6 +28,12 @@ Merkle DAGs were developed as a solution to incorporate folders of files, addres
 
 Like Merkle DAGs, Scionic Merkle Trees can accommodate storing folders of files. This means an entire directory of files and subfolders can be converted into a Scionic Merkle Tree.
 
+### ***Content-Defined File Chunking:***
+
+Files are split into chunks with content-defined chunking (FastCDC): chunk boundaries are derived from the bytes themselves rather than from fixed offsets, so identical content produces identical chunks no matter where it appears. Because every chunk leaf is content-addressed by its hash, any repeated data — the same file uploaded twice, two versions of a large file, or the same run of bytes shared by different files — resolves to the same chunk leaves and is stored and transmitted only once. Editing a large file no longer shifts every boundary after the edit: only the one or two chunks around the change are new, and every untouched chunk keeps its hash and deduplicates against the previous version.
+
+Chunk sizes are bounded to a fixed range — 512 KiB minimum, 2 MiB target, 8 MiB forced maximum — so the chunking stays predictable under adversarial input: no crafted or degenerate content can manufacture a flood of tiny chunks or an unbounded giant chunk to stall producers, verifiers or transports. Worst-case memory, verification and transmission costs stay capped exactly as they were with fixed-size chunking, while the boundaries themselves become content-derived instead of arbitrary — which is what makes the content addressing actually deduplicate. The algorithm is frozen as [`fastcdc-v1`](docs/fastcdc-v1.md) — gear table, masks and boundary rule are normative — and the Rust and Swift ports cut bit-identical chunks, so deduplication holds across every implementation and platform.
+
 ### ***Chunked Parent Leaves:***
 
 Within each parent leaf (folder), its list of hashes (chunks/children) are organized as a Classic Merkle Tree rather than a potentially large plaintext list of hashes. Large files or folders lead to many chunks, which can eventually lead to an extremely large lists of hashes. By ensuring the parent leaf is chunked with a Classic Merkle Tree, this scaling problem emerging from large amounts of data can be avoided.
@@ -78,7 +84,8 @@ Turn a folder and its files into a Scionic Merkle DAG-Tree, verify, then convert
 input := filepath.Join(tmpDir, "input")
 output := filepath.Join(tmpDir, "output")
 
-// Set chunk size for file processing (optional - defaults to 2 MB)
+// Files are chunked with FastCDC content-defined chunking (fastcdc-v1) by
+// default. Optionally pin legacy fixed-size chunking instead:
 SetChunkSize(4096)
 
 // Create DAG from directory with timestamp in root
@@ -130,13 +137,16 @@ if err != nil {
 
 ### Chunking Configuration
 ```go
-// Set custom chunk size
+// Default: FastCDC content-defined chunking (fastcdc-v1) — 512 KiB min,
+// 2 MiB target, 8 MiB forced max. Frozen spec: docs/fastcdc-v1.md.
+
+// Legacy: pin fixed-size chunking (roots carry no chunking tag)
 SetChunkSize(1024 * 1024) // 1MB chunks
 
-// Disable chunking entirely (files processed as single chunks)
+// Legacy: disable chunking entirely (files processed as single chunks)
 DisableChunking()
 
-// Reset to default chunk size (2 MB)
+// Restore the default (fastcdc-v1)
 SetDefaultChunkSize()
 ```
 
@@ -296,11 +306,14 @@ func TransmissionPacketFromCBOR(data []byte) (*TransmissionPacket, error)
 func TransmissionPacketFromJSON(data []byte) (*TransmissionPacket, error)
 ```
 
-### Chunk Size Configuration
+### Chunking Configuration
 ```go
-func SetChunkSize(size int)
-func DisableChunking()
-func SetDefaultChunkSize()
+func SetChunkSize(size int)          // legacy fixed-size mode
+func DisableChunking()               // legacy single-chunk mode
+func SetDefaultChunkSize()           // restore the fastcdc-v1 default
+func FastCDCEnabled() bool
+func ActiveChunkingTag() string      // "fastcdc-v1", or "" under legacy modes
+func CutChunks(data []byte) [][]byte // mode-aware public cutter
 ```
 
 ### Leaf Builder
@@ -379,51 +392,25 @@ for _, packet := range packets {
 
 ### Chunking Configuration
 
-The library provides flexible file chunking options:
+Files are chunked with **FastCDC content-defined chunking (`fastcdc-v1`)** by default: 512 KiB minimum, 2 MiB target, 8 MiB forced maximum, with the gear table and masks frozen in [docs/fastcdc-v1.md](docs/fastcdc-v1.md). Content-defined boundaries confine an edit to ~1–2 chunks, so a re-upload of an edited file reuses almost every chunk — and every producer cutting through the library produces identical chunks for identical bytes, which is the property cross-context dedup depends on. Roots built under fastcdc-v1 carry `AdditionalData["chunking"] = "fastcdc-v1"`; verification never re-chunks, so trees from either mode verify identically.
 
-#### Default Chunking
-Files are automatically split into chunks of 2,097,152 bytes (2 MB) by default:
-```go
-// Uses default chunk size
-dag, err := CreateDag("./directory", true)
-```
+#### Legacy fixed-size chunking
 
-#### Custom Chunk Size
-Set a specific chunk size for your use case:
+Fixed-size cutting remains available for tooling pinned to it (the committed spec-vector corpus, older tests). Legacy roots carry no chunking tag (absent ⇒ `fixed-2m`):
 ```go
-// Set 1MB chunk size
+// Pin fixed-size chunks
 SetChunkSize(1024 * 1024)
 dag, err := CreateDag("./directory", true)
 
-// Set 4KB chunk size for smaller files
-SetChunkSize(4096)
-dag, err := CreateDag("./directory", true)
-```
-
-#### Disable Chunking
-When chunking is disabled, entire files are processed as single chunks regardless of size:
-```go
-// Disable chunking - files stored as single chunks
+// Process every file as a single chunk regardless of size
 DisableChunking()
-dag, err := CreateDag("./directory", true)
+dag, err = CreateDag("./directory", true)
 
-// This is equivalent to:
-SetChunkSize(-1)
-```
-
-**Use DisableChunking() when:**
-- Working with many small files where chunking overhead isn't beneficial
-- You want simpler DAG structures with fewer total leaves
-- Network transmission of individual files is more important than partial file access
-- You're building custom chunking logic at a higher level
-
-**Note:** Disabling chunking can result in very large leaves for big files, which may impact memory usage and network transmission efficiency for partial file access.
-
-#### Reset to Default
-```go
-// Reset back to default 2 MB chunks
+// Restore the fastcdc-v1 default
 SetDefaultChunkSize()
 ```
+
+**Note:** disabling chunking can produce very large leaves for big files, which may impact memory usage and network transmission efficiency.
 
 The trees are now in beta and the data structure of the trees will no longer change.
 #

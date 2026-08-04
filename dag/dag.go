@@ -108,6 +108,10 @@ func CreateDagWithConfig(path string, config *DagBuilderConfig) (*Dag, error) {
 }
 
 func createDag(path string, additionalData map[string]string, processor LeafProcessor) (*Dag, error) {
+	// The chunking tag is stamped here, at the single point every creation
+	// path funnels through, so the root always states how the tree was cut.
+	additionalData = withChunkingTag(additionalData)
+
 	dag := CreateDagBuilder()
 
 	fileInfo, err := os.Stat(path)
@@ -158,6 +162,8 @@ func createDag(path string, additionalData map[string]string, processor LeafProc
 
 // createDagParallel creates a DAG using parallel processing
 func createDagParallel(path string, additionalData map[string]string, processor LeafProcessor, config *DagBuilderConfig) (*Dag, error) {
+	additionalData = withChunkingTag(additionalData)
+
 	dag := CreateDagBuilder()
 
 	fileInfo, err := os.Stat(path)
@@ -306,7 +312,7 @@ func processFile(entry fs.DirEntry, fullPath string, path *string, dag *DagBuild
 	var singleChunk []byte
 	chunkCount := 0
 
-	streamErr := streamFileChunks(fullPath, ChunkSize, func(chunk []byte, index int) error {
+	streamErr := streamChunksFromFile(fullPath, func(chunk []byte, index int) error {
 		chunkCount++
 		if chunkCount == 1 {
 			// Store first chunk - might be the only one
@@ -608,7 +614,7 @@ func processFileParallel(entry fs.DirEntry, fullPath string, path *string, dag *
 	var singleChunk []byte
 	chunkCount := 0
 
-	streamErr := streamFileChunks(fullPath, ChunkSize, func(chunk []byte, index int) error {
+	streamErr := streamChunksFromFile(fullPath, func(chunk []byte, index int) error {
 		chunkCount++
 		if chunkCount == 1 {
 			// Store first chunk - might be the only one

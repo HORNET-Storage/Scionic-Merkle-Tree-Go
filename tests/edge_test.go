@@ -59,6 +59,11 @@ func TestOutOfRangeLeafRequests(t *testing.T) {
 }
 
 func TestSingleFileScenarios(t *testing.T) {
+	// The expectedChunks arithmetic below is fixed-size ceil math; pin the
+	// legacy fixed mode explicitly now that fastcdc-v1 is the default cutter.
+	dag.SetChunkSize(dag.DefaultChunkSize)
+	defer dag.SetDefaultChunkSize()
+
 	tmpDir, err := os.MkdirTemp("", "test")
 	if err != nil {
 		t.Fatalf("Could not create temp directory: %s", err)

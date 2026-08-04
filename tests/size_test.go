@@ -231,6 +231,11 @@ func TestContentSizeAndDagSizeAccuracy(t *testing.T) {
 
 	t.Run("ChunkedFileContentSize", func(t *testing.T) {
 		// Test 5: For chunked files, ContentSize should match total content
+		// expectedChunks below is fixed-size ceil math; pin the legacy fixed
+		// mode explicitly now that fastcdc-v1 is the default cutter.
+		dag.SetChunkSize(dag.DefaultChunkSize)
+		defer dag.SetDefaultChunkSize()
+
 		largeFile := filepath.Join(testDir, "large.txt")
 		largeContent := bytes.Repeat([]byte("e"), dag.ChunkSize*2+100)
 		err = os.WriteFile(largeFile, largeContent, 0644)
